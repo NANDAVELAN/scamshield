@@ -111,3 +111,21 @@ def test_control_endpoints():
 
     # Reset mode
     client.post("/control/mode", json={"autonomy": "ask", "privacy": False})
+
+def test_control_harness_and_static_ui():
+    """Verify Control Center harness endpoint and static UI routes."""
+    h_resp = client.get("/control/harness")
+    assert h_resp.status_code == 200
+    h_data = h_resp.json()
+    assert h_data["all_invariants_passed"] is True
+    assert len(h_data["invariants"]) == 8
+
+    # Static UI route checks
+    ui_resp = client.get("/control/ui/")
+    assert ui_resp.status_code == 200
+    assert "ScamShield" in ui_resp.text
+
+    sim_resp = client.get("/simulator/")
+    assert sim_resp.status_code == 200
+    assert "Simulator" in sim_resp.text
+

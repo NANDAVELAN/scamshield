@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScamShield — Mission Control Center</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">🛡️</div>
+        <div>
+          <h2>ScamShield</h2>
+          <span class="brand-sub">CONTROL CENTER</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="tab-analyze">
+          <span class="nav-icon">⚡</span>
+          <span>Live Analysis</span>
+        </button>
+        <button class="nav-item" data-tab="tab-incidents">
+          <span class="nav-icon">🚨</span>
+          <span>Incidents & Approvals</span>
+          <span class="nav-badge" id="badge-pending-count">0</span>
+        </button>
+        <button class="nav-item" data-tab="tab-mission">
+          <span class="nav-icon">🎛️</span>
+          <span>Mission Control</span>
+        </button>
+        <button class="nav-item" data-tab="tab-safety">
+          <span class="nav-icon">🏆</span>
+          <span>Invariants & Safety</span>
+        </button>
+        <button class="nav-item" data-tab="tab-audit">
+          <span class="nav-icon">📜</span>
+          <span>Audit Ledger</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="system-status-card">
+          <div class="status-row">
+            <span class="pulse-indicator"></span>
+            <span class="status-text" id="sys-status-text">Engine Online</span>
+          </div>
+          <div class="status-meta" id="sys-provider-text">Active: Gemini / Rules</div>
+        </div>
+        <div class="ext-links">
+          <a href="/simulator" target="_blank" class="link-btn">📱 Open Simulator</a>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="main-content">
+      <!-- TOP HEADER -->
+      <header class="top-header">
+        <div class="header-title">
+          <h1 id="page-title">Live Analysis & Cognitive Pipeline</h1>
+          <p class="header-subtitle" id="page-subtitle">Sub-second Jev reflex gating & multi-agent Google ADK reasoning</p>
+        </div>
+        <div class="header-tools">
+          <div class="mode-pill" id="pill-autonomy">Autonomy: ASK</div>
+          <div class="mode-pill" id="pill-privacy">Privacy: OFF</div>
+          <button class="btn btn-sm btn-outline" id="btn-refresh-state">🔄 Refresh</button>
+        </div>
+      </header>
+
+      <!-- TAB 1: LIVE ANALYSIS -->
+      <section class="tab-pane active" id="tab-analyze">
+        <div class="grid-analyze">
+          <!-- Left: Input & Preset Selector -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Inbound Message Testbed</h3>
+              <div class="preset-dropdown-wrap">
+                <select id="select-preset" class="form-select">
+                  <option value="">-- Load Attack Preset --</option>
+                  <option value="sbi">SBI YONO APK Phishing (SMS)</option>
+                  <option value="electricity">Electricity Cut-off Urgency (SMS)</option>
+                  <option value="digital_arrest">Digital Arrest Skype Extortion (WhatsApp)</option>
+                  <option value="fedex">FedEx Customs Narcotics Threat (SMS)</option>
+                  <option value="job">YouTube Like & Earn Telegram Scam (WhatsApp)</option>
+                  <option value="jailbreak">Adversarial Prompt Injection (Override Rule)</option>
+                  <option value="legit">Legitimate Bank Transaction OTP (Safe)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group-row">
+              <div class="form-group">
+                <label>Channel</label>
+                <select id="ana-channel" class="form-control">
+                  <option value="sms">SMS</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="email">Email</option>
+                  <option value="telegram">Telegram</option>
+                </select>
+              </div>
+              <div class="form-group flex-2">
+                <label>Sender Address / Phone</label>
+                <input type="text" id="ana-sender" class="form-control" value="VM-SBIINB">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Message Body (Untrusted Content)</label>
+              <textarea id="ana-body" class="form-control code-font" rows="4" placeholder="Paste incoming message content..."></textarea>
+            </div>
+
+            <div class="form-group-row">
+              <div class="form-group flex-1">
+                <label>URLs (comma separated)</label>
+                <input type="text" id="ana-urls" class="form-control" placeholder="http://sbi-kyc.com">
+              </div>
+              <div class="form-group flex-1">
+                <label>Attachments (comma separated)</label>
+                <input type="text" id="ana-attachments" class="form-control" placeholder="Yono_Update.apk">
+              </div>
+            </div>
+
+            <div class="card-footer-actions">
+              <button class="btn btn-secondary" id="btn-ana-clear">Clear</button>
+              <button class="btn btn-primary" id="btn-ana-run">
+                ⚡ Run Agent Analysis
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Visual Pipeline & Stream -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Cognitive Multi-Agent Pipeline</h3>
+              <span class="latency-badge" id="ana-latency">Ready</span>
+            </div>
+
+            <!-- Agent Nodes Flowchart -->
+            <div class="flow-graph">
+              <div class="flow-node" id="fl-triage">
+                <div class="flow-icon">⚡</div>
+                <div class="flow-title">Reflex Gate</div>
+                <div class="flow-desc">Jev / Flash (<100ms)</div>
+              </div>
+              <div class="flow-connector">→</div>
+              <div class="flow-node" id="fl-investigators">
+                <div class="flow-icon">🔍</div>
+                <div class="flow-title">Investigators</div>
+                <div class="flow-desc">URL · Sender · Attach</div>
+              </div>
+              <div class="flow-connector">→</div>
+              <div class="flow-node" id="fl-verdict">
+                <div class="flow-icon">⚖️</div>
+                <div class="flow-title">Verdict Synth</div>
+                <div class="flow-desc">Google ADK Agent</div>
+              </div>
+              <div class="flow-connector">→</div>
+              <div class="flow-node" id="fl-action">
+                <div class="flow-icon">🛡️</div>
+                <div class="flow-title">Action Proposal</div>
+                <div class="flow-desc">Consent Gate (No Delete)</div>
+              </div>
+            </div>
+
+            <!-- Terminal SSE Log -->
+            <div class="terminal-log" id="ana-terminal">
+              <div class="term-line info">[System] Connected to ScamShield SSE pipeline stream.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Result Box (Appears after analysis) -->
+        <div class="card verdict-card-large" id="ana-result-box" style="display: none; margin-top: 20px;">
+          <div class="card-header">
+            <div class="verdict-title-wrap">
+              <span class="verdict-label-badge" id="res-badge">SCAM</span>
+              <h3 id="res-title">Threat Intercepted</h3>
+            </div>
+            <div class="verdict-metrics">
+              <span class="metric-pill">Risk Score: <b id="res-score">85</b>/100</span>
+              <span class="metric-pill">Provider: <b id="res-provider">Gemini Flash</b></span>
+              <span class="metric-pill" id="res-cache-pill">Cache: Miss</span>
+            </div>
+          </div>
+
+          <div class="verdict-content">
+            <p class="verdict-desc" id="res-explanation">Explanation...</p>
+            
+            <div class="defanged-box" id="res-defanged-box" style="display: none;">
+              <span class="tag-sm">SAFE REDACTED PREVIEW</span>
+              <div id="res-defanged-text" class="code-font"></div>
+            </div>
+
+            <div class="evidence-section">
+              <h4>Grounded Evidence Trail (Tool Findings)</h4>
+              <div class="evidence-grid-modern" id="res-evidence-list">
+                <!-- Evidence pills inserted dynamically -->
+              </div>
+            </div>
+
+            <div class="action-proposal-bar" id="res-action-bar">
+              <div class="action-prompt">
+                <strong>Recommended Non-Destructive Action:</strong>
+                <span id="res-action-text" class="action-highlight">Quarantine Message & Defang Links</span>
+              </div>
+              <div class="action-buttons-wrap">
+                <button class="btn btn-danger" id="res-btn-approve">Approve Quarantine</button>
+                <button class="btn btn-secondary" id="res-btn-reject">Reject Action</button>
+                <button class="btn btn-outline" id="res-btn-undo" style="display: none;">Undo Action</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: INCIDENTS & APPROVALS -->
+      <section class="tab-pane" id="tab-incidents">
+        <div class="filter-bar">
+          <div class="filter-tabs">
+            <button class="filter-tab active" data-filter="all">All Incidents</button>
+            <button class="filter-tab" data-filter="pending_approval">Pending Approval</button>
+            <button class="filter-tab" data-filter="approved">Quarantined / Executed</button>
+            <button class="filter-tab" data-filter="rejected">Rejected</button>
+          </div>
+          <div class="search-wrap">
+            <input type="text" id="incident-search" placeholder="Filter by ID, sender, or keyword..." class="form-control">
+          </div>
+        </div>
+
+        <div class="incidents-container" id="incidents-list">
+          <!-- Incident Cards Rendered Here -->
+        </div>
+      </section>
+
+      <!-- TAB 3: MISSION CONTROL -->
+      <section class="tab-pane" id="tab-mission">
+        <div class="grid-mission">
+          <!-- Outage Simulation & Model Routing -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Model Routing & Outage Simulator</h3>
+            </div>
+            <p class="card-desc">Simulate provider blackouts to verify graceful fallback (Gemini → OpenRouter → Ollama → Rules).</p>
+
+            <div class="provider-status-list">
+              <div class="provider-row">
+                <div class="provider-info">
+                  <strong>Gemini Flash / Pro</strong>
+                  <span>Primary Cloud Provider</span>
+                </div>
+                <button class="btn btn-sm btn-outline btn-outage" data-provider="gemini_flash,gemini_pro" id="btn-outage-gemini">
+                  Simulate Outage
+                </button>
+              </div>
+
+              <div class="provider-row">
+                <div class="provider-info">
+                  <strong>OpenRouter (Claude / DeepSeek)</strong>
+                  <span>Secondary Cloud Fallback</span>
+                </div>
+                <button class="btn btn-sm btn-outline btn-outage" data-provider="openrouter" id="btn-outage-openrouter">
+                  Simulate Outage
+                </button>
+              </div>
+
+              <div class="provider-row">
+                <div class="provider-info">
+                  <strong>Ollama (Local Llama 3)</strong>
+                  <span>Air-Gapped / Privacy Fallback</span>
+                </div>
+                <span class="status-tag tag-healthy">Available</span>
+              </div>
+
+              <div class="provider-row">
+                <div class="provider-info">
+                  <strong>Deterministic Rules Engine</strong>
+                  <span>Sub-Millisecond Zero-Failure Safety Net</span>
+                </div>
+                <span class="status-tag tag-healthy">Active Invariant</span>
+              </div>
+            </div>
+
+            <div class="control-row-group">
+              <div class="form-group">
+                <label>Force Provider (Override Auto-Router)</label>
+                <select id="ctrl-force-provider" class="form-control">
+                  <option value="">Auto (Default Intelligent Fallback)</option>
+                  <option value="gemini_flash">Force Gemini Flash</option>
+                  <option value="gemini_pro">Force Gemini Pro</option>
+                  <option value="openrouter">Force OpenRouter</option>
+                  <option value="ollama">Force Ollama (Local)</option>
+                  <option value="rules">Force Rules Only (Zero AI)</option>
+                </select>
+              </div>
+              <button class="btn btn-secondary btn-sm" id="btn-reset-outages">Reset All Outages</button>
+            </div>
+          </div>
+
+          <!-- Autonomy Dial & Privacy Settings -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Autonomy Dial & Safety Controls</h3>
+            </div>
+            
+            <div class="form-group">
+              <label>Autonomy Level</label>
+              <div class="radio-card-group">
+                <label class="radio-card">
+                  <input type="radio" name="autonomy_mode" value="observe">
+                  <div class="radio-card-content">
+                    <strong>Observe</strong>
+                    <span>Log only; never propose or execute actions.</span>
+                  </div>
+                </label>
+                <label class="radio-card active">
+                  <input type="radio" name="autonomy_mode" value="ask" checked>
+                  <div class="radio-card-content">
+                    <strong>Ask (Human in the Loop)</strong>
+                    <span>Strict consent required before any action.</span>
+                  </div>
+                </label>
+                <label class="radio-card">
+                  <input type="radio" name="autonomy_mode" value="auto_low_risk">
+                  <div class="radio-card-content">
+                    <strong>Auto Low Risk</strong>
+                    <span>Autonomous execution for high-confidence scams within budget.</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="settings-toggle-row">
+              <div>
+                <strong>Privacy Mode</strong>
+                <p class="text-muted text-sm">Force local-only analysis (zero cloud data transfer).</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-privacy">
+                <span class="slider round"></span>
+              </label>
+            </div>
+
+            <div class="settings-toggle-row">
+              <div>
+                <strong>Emergency Pipeline Pause</strong>
+                <p class="text-muted text-sm">Temporarily halt all inbound analysis.</p>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="toggle-paused">
+                <span class="slider round"></span>
+              </label>
+            </div>
+
+            <div class="cache-box">
+              <div class="cache-info">
+                <span>Verdict SHA-256 Cache:</span>
+                <b id="cache-stats-text">0 items (0 hits)</b>
+              </div>
+              <button class="btn btn-sm btn-outline" id="btn-clear-cache">Clear Cache</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: SAFETY INVARIANTS & HARNESS -->
+      <section class="tab-pane" id="tab-safety">
+        <div class="scoreboard-grid">
+          <div class="metric-card">
+            <h4>Golden Catch Rate</h4>
+            <div class="metric-val text-emerald" id="m-catch-rate">100.0%</div>
+            <span class="metric-sub">20 Verified Real-World Scams</span>
+          </div>
+          <div class="metric-card">
+            <h4>False Positive Rate</h4>
+            <div class="metric-val text-cyan" id="m-fp-rate">0.0%</div>
+            <span class="metric-sub">0 Legitimate Messages Flagged</span>
+          </div>
+          <div class="metric-card">
+            <h4>Adversarial Defenses</h4>
+            <div class="metric-val text-emerald" id="m-adv-rate">15 / 15</div>
+            <span class="metric-sub">100% Prompt Injections Blocked</span>
+          </div>
+          <div class="metric-card">
+            <h4>Safety Invariants</h4>
+            <div class="metric-val text-emerald" id="m-inv-status">8 / 8 PASS</div>
+            <span class="metric-sub">Guaranteed by Code Architecture</span>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+          <div class="card-header">
+            <h3>Verified Safety Invariants (I1 — I8)</h3>
+            <button class="btn btn-primary btn-sm" id="btn-run-harness">
+              🚀 Run Live Safety Verification
+            </button>
+          </div>
+          <p class="card-desc">Every invariant is verified systematically by test assertions before deployment.</p>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Safety Invariant Description</th>
+                <th>Enforcement Mechanism</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="invariants-table-body">
+              <tr>
+                <td><b>I1</b></td>
+                <td>Zero-Delete Guarantee: No code path can delete anything</td>
+                <td>Filesystem Guardrail & Server Executor</td>
+                <td><span class="badge badge-success">VERIFIED PASS</span></td>
+              </tr>
+              <tr>
+                <td><b>I2</b></td>
+                <td>Consent Before Execution: Actions require approval in Ask mode</td>
+                <td>Action Policy Guardrail & Server State</td>
+                <td><span class="badge badge-success">VERIFIED PASS</span></td>
+              </tr>
+              <tr>
+                <td><b>I3</b></td>
+                <td>Grounded Evidence: All evidence sources must be real tool outputs</td>
+                <td>Output Guardrail & Schema Verification</td>
+                <td><span class="badge badge-success">VERIFIED PASS</span></td>
+              </tr>
+              <tr>
+                <td><b>I4</b></td>
+                <td>Fail-Closed Default: Errors and timeouts never return 'safe'</td>
+                <td>Router Fallback & Error Traps</td>
+                <td><span class="badge badge-success">VERIFIED PASS</span></td>
+              </tr>
+              <tr>
+                <td><b>I5</b></td>
+                <td>Pre-Flight Redaction: Raw phone & account numbers redacted before model</td>
+                <td>Input Guardrail & Regex Normalizer</td>
+                <td><span class="badge badge-success">VERIFIED PASS</span></td>
+              </tr>
+              <tr>
+                <td><b>I6</b></td>
+                <td>Injection Defense: Prompt injection attempts never lower risk score</td>
+                <td>Input Guardrail Injection Detector</td>
+                <td><span class="badge badge-success">VERIFIED PASS</span></td>
+              </tr>
+              <tr>
+                <td><b>I7</b></td>
+                <td>Auto-Action Budget: Autonomous actions capped & restricted to low risk</td>
+                <td>Daily Action Budget & Risk Threshold</td>
+                <td><span class="badge badge-success">VERIFIED PASS</span></td>
+              </tr>
+              <tr>
+                <td><b>I8</b></td>
+                <td>Link Defanging: Malicious URLs defanged (hxxp://) in user text</td>
+                <td>Defang Module & Output Guardrail</td>
+                <td><span class="badge badge-success">VERIFIED PASS</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 5: AUDIT LEDGER -->
+      <section class="tab-pane" id="tab-audit">
+        <div class="card">
+          <div class="card-header">
+            <h3>Append-Only Security Audit Ledger</h3>
+            <span class="tag-sm">TAMPER EVIDENT</span>
+          </div>
+          <p class="card-desc">Every execution, quarantine, rejection, and undo action is recorded permanently in the audit trail.</p>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Action</th>
+                <th>Incident ID</th>
+                <th>Actor</th>
+                <th>Target</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="audit-table-body">
+              <tr>
+                <td colspan="6" class="text-center text-muted">No audit events recorded in this session yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

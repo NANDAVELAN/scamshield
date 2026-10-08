@@ -90,3 +90,48 @@ def clear_verdict_cache():
 def get_audit_trail():
     """Return append-only audit trail."""
     return {"audit_log": action_policy.audit_log}
+
+@router_control.get("/harness")
+def get_harness_report():
+    """Get latest safety harness report and invariant statuses."""
+    import os
+    import json
+    report_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "harness", "harness_report.json")
+    if os.path.exists(report_path):
+        with open(report_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    
+    # Generate on the fly if missing
+    from harness.run import run_golden_suite, run_adversarial_suite, verify_all_invariants
+    import time
+    golden = run_golden_suite()
+    adv = run_adversarial_suite()
+    invariants, all_passed = verify_all_invariants()
+    return {
+        "timestamp": time.time(),
+        "metrics": golden,
+        "adversarial": adv,
+        "invariants": invariants,
+        "all_invariants_passed": all_passed
+    }
+
+@router_control.post("/harness/run")
+def trigger_harness_run():
+    """Trigger live execution of safety harness and invariant assertions."""
+    import time
+    from harness.run import run_golden_suite, run_adversarial_suite, verify_all_invariants
+    from harness.report import generate_report
+    
+    golden = run_golden_suite()
+    adv = run_adversarial_suite()
+    invariants, all_passed = verify_all_invariants()
+    
+    report_payload = {
+        "timestamp": time.time(),
+        "metrics": golden,
+        "adversarial": adv,
+        "invariants": invariants,
+        "all_invariants_passed": all_passed
+    }
+    generate_report(report_payload)
+    return {"status": "success", "report": report_payload}
