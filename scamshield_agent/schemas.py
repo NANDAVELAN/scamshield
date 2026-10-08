@@ -1,6 +1,5 @@
-from __future__ import annotations
-from pydantic import BaseModel, Field
-from typing import Literal, Optional, List, Dict, Any
+from pydantic import BaseModel, Field, field_validator
+from typing import Literal, Optional, List, Dict, Any, Union
 
 class Evidence(BaseModel):
     source_tool: str                      # e.g. "get_domain_age"
@@ -29,7 +28,7 @@ class AttachmentInfo(BaseModel):
     size_kb: Optional[float] = 0.0
 
 class AnalyzeRequest(BaseModel):
-    channel: Literal["gmail", "whatsapp", "sms", "web"] = "gmail"
+    channel: str = "gmail"
     sender: str
     subject: Optional[str] = ""
     body: str
@@ -37,6 +36,21 @@ class AnalyzeRequest(BaseModel):
     attachments: list[AttachmentInfo] = Field(default_factory=list)
     headers: dict[str, str] = Field(default_factory=dict)
     language_pref: str = "en"
+
+    @field_validator("attachments", mode="before")
+    @classmethod
+    def normalize_attachments(cls, v):
+        if not v:
+            return []
+        res = []
+        for item in v:
+            if isinstance(item, str):
+                res.append({"name": item, "size_kb": 0.0})
+            elif isinstance(item, dict):
+                res.append(item)
+            else:
+                res.append(item)
+        return res
 
 class AnalyzeResponse(BaseModel):
     incident_id: str
@@ -64,3 +78,18 @@ class Incident(BaseModel):
     cache_hit: bool = False
     campaign_id: Optional[str] = None
     audit_log: list[dict] = Field(default_factory=list)
+
+    @field_validator("attachments", mode="before")
+    @classmethod
+    def normalize_attachments(cls, v):
+        if not v:
+            return []
+        res = []
+        for item in v:
+            if isinstance(item, str):
+                res.append({"name": item, "size_kb": 0.0})
+            elif isinstance(item, dict):
+                res.append(item)
+            else:
+                res.append(item)
+        return res

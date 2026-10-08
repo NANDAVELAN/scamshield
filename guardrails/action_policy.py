@@ -24,9 +24,11 @@ class ActionPolicy:
         self.audit_log: List[Dict[str, Any]] = []
 
     def log_action(self, action_type: str, target: str, status: str, details: Dict[str, Any]):
+        inc_id = details.get("incident_id") if isinstance(details, dict) else None
         self.audit_log.append({
             "timestamp": time.time(),
             "action": action_type,
+            "incident_id": inc_id or "SYSTEM",
             "target": target,
             "status": status,
             "details": details
