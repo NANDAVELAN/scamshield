@@ -1,6 +1,6 @@
 """Incident repository and audit store for ScamShield."""
 import time
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from scamshield_agent.schemas import Incident
 
 class IncidentStore:

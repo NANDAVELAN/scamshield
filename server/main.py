@@ -255,7 +255,22 @@ def undo_incident_action(incident_id: str):
         raise HTTPException(status_code=400, detail=res.get("message"))
     return res
 
-# Static files for Control Center UI if directory exists
+from fastapi.responses import RedirectResponse
+
+@app.get("/")
+def root_redirect():
+    return RedirectResponse(url="/control/ui")
+
+@app.get("/control")
+def control_redirect():
+    return RedirectResponse(url="/control/ui")
+
+# Static files for Control Center UI
 control_ui_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "control_center")
 if os.path.exists(control_ui_dir):
     app.mount("/control/ui", StaticFiles(directory=control_ui_dir, html=True), name="control_ui")
+
+# Static files for Simulator
+simulator_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "simulator")
+if os.path.exists(simulator_dir):
+    app.mount("/simulator", StaticFiles(directory=simulator_dir, html=True), name="simulator")

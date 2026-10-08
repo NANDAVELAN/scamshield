@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ScamShield — Live Attack & Defense Simulator</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- TOP NAVIGATION BAR -->
+    <header class="top-nav">
+      <div class="brand">
+        <div class="shield-logo">🛡️</div>
+        <div>
+          <h1>ScamShield <span class="tag">SIMULATOR</span></h1>
+          <p class="subtitle">AI Inbox Immune System · Google ADK 2-Speed Reflex Architecture</p>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <div class="status-indicator">
+          <span class="pulse-dot"></span>
+          <span id="backend-status">Connected to Local Engine (Port 8080)</span>
+        </div>
+        <a href="/control/ui" target="_blank" class="nav-btn">🖥️ Control Center</a>
+      </div>
+    </header>
+
+    <!-- MAIN TWO-COLUMN WORKSPACE -->
+    <main class="workspace">
+      <!-- LEFT COLUMN: SCENARIO SELECTOR & INBOX MOCK -->
+      <section class="left-col">
+        <!-- Preset Scenario Selector -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3>⚡ Live Scenario Presets (India 2024–2026 Scams)</h3>
+          </div>
+          <div class="preset-chips">
+            <button class="chip active" data-preset="sbi">🏦 SBI KYC APK</button>
+            <button class="chip" data-preset="electricity">⚡ Electricity Cut-off</button>
+            <button class="chip" data-preset="digital_arrest">👮 Digital Arrest (CBI)</button>
+            <button class="chip" data-preset="fedex">📦 FedEx Drug Parcel</button>
+            <button class="chip" data-preset="job">💰 YouTube Like & Earn</button>
+            <button class="chip" data-preset="legit">✅ Legit Bank OTP</button>
+          </div>
+        </div>
+
+        <!-- Phone Mock / Message Inspector -->
+        <div class="panel phone-panel">
+          <div class="phone-frame">
+            <div class="phone-header">
+              <div class="phone-channel-info">
+                <span id="channel-icon">💬</span>
+                <div>
+                  <div class="sender-name" id="disp-sender">+91-9876543210 (Unknown)</div>
+                  <div class="channel-type" id="disp-channel">SMS / WhatsApp</div>
+                </div>
+              </div>
+              <span class="badge" id="reflex-badge">WAITING</span>
+            </div>
+
+            <div class="chat-thread" id="chat-thread">
+              <!-- Message bubbles rendered here -->
+            </div>
+
+            <!-- Composer / Custom Payload Input -->
+            <div class="composer">
+              <div class="input-meta">
+                <input type="text" id="input-sender" placeholder="Sender ID or Phone..." value="+91-9876543210">
+                <select id="input-channel">
+                  <option value="sms">SMS</option>
+                  <option value="whatsapp">WhatsApp</option>
+                  <option value="telegram">Telegram</option>
+                  <option value="email">Email</option>
+                </select>
+              </div>
+              <textarea id="input-body" placeholder="Type or paste incoming suspicious message..." rows="3"></textarea>
+              <div class="composer-actions">
+                <button class="btn btn-secondary" id="btn-clear">Clear</button>
+                <button class="btn btn-primary" id="btn-simulate">
+                  🚀 Launch Attack Simulation
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- RIGHT COLUMN: 2-SPEED COGNITIVE DEFENSE PIPELINE -->
+      <section class="right-col">
+        <!-- Reflex Gate Card -->
+        <div class="panel reflex-card">
+          <div class="panel-header">
+            <h3>⚡ Reflex Tier (Sub-100ms Gate)</h3>
+            <span class="latency-pill" id="reflex-latency">-- ms</span>
+          </div>
+          <div class="reflex-content" id="reflex-display">
+            <p class="placeholder-text">Awaiting incoming message to trigger Jev / Flash Reflex Guard...</p>
+          </div>
+        </div>
+
+        <!-- Multi-Agent ADK Pipeline Streaming -->
+        <div class="panel pipeline-card">
+          <div class="panel-header">
+            <h3>🧠 Deep Cognitive ADK Multi-Agent Stream</h3>
+            <span class="provider-pill" id="pipeline-provider">Ready</span>
+          </div>
+
+          <div class="agent-graph">
+            <div class="agent-node" id="node-triage">
+              <div class="node-icon">🚦</div>
+              <div class="node-label">Triage Agent</div>
+              <div class="node-state">Idle</div>
+            </div>
+            <div class="agent-arrow">→</div>
+            <div class="agent-node" id="node-url">
+              <div class="node-icon">🔗</div>
+              <div class="node-label">URL Inv.</div>
+              <div class="node-state">Idle</div>
+            </div>
+            <div class="agent-arrow">→</div>
+            <div class="agent-node" id="node-sender">
+              <div class="node-icon">👤</div>
+              <div class="node-label">Sender Inv.</div>
+              <div class="node-state">Idle</div>
+            </div>
+            <div class="agent-arrow">→</div>
+            <div class="agent-node" id="node-attach">
+              <div class="node-icon">📎</div>
+              <div class="node-label">Attach Inv.</div>
+              <div class="node-state">Idle</div>
+            </div>
+            <div class="agent-arrow">→</div>
+            <div class="agent-node" id="node-verdict">
+              <div class="node-icon">⚖️</div>
+              <div class="node-label">Verdict Synth</div>
+              <div class="node-state">Idle</div>
+            </div>
+          </div>
+
+          <div class="stream-log" id="stream-log">
+            <div class="log-line info">[System] Multi-agent orchestration engine initialized.</div>
+          </div>
+        </div>
+
+        <!-- Synthesized Verdict & Defense Proposal Card -->
+        <div class="panel verdict-card">
+          <div class="panel-header">
+            <h3>🛡️ Grounded Verdict & Action Proposal</h3>
+            <span class="risk-badge badge-neutral" id="verdict-score-badge">SCORE: --</span>
+          </div>
+
+          <div class="verdict-body" id="verdict-body">
+            <p class="placeholder-text">Verdict synthesis will appear once multi-agent consensus is reached.</p>
+          </div>
+
+          <div class="action-footer" id="action-footer" style="display: none;">
+            <div class="action-title">PROPOSED NON-DESTRUCTIVE DEFENSE:</div>
+            <div class="action-details" id="action-proposal-desc">Quarantine message and defang URLs</div>
+            <div class="action-buttons">
+              <button class="btn btn-danger" id="btn-approve-action">✅ Approve Quarantine</button>
+              <button class="btn btn-secondary" id="btn-reject-action">❌ Reject Action</button>
+              <button class="btn btn-outline" id="btn-undo-action" style="display: none;">↩️ Undo</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
