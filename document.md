@@ -120,14 +120,17 @@ scamshield/
   - Implemented deterministic reflex scorer (`triage/rules.py`) with zero-latency rules-only verdict fallback
   - Wrote 20-message sample catalog (`tests/sample_messages.json`) with 12 scams & 8 legitimate cases
   - 10 unit tests in `tests/test_tools.py` and `tests/test_triage.py` passing with **100% Catch Rate** and **0% False Positives**
-- [ ] **Phase 2: ADK Graph Execution & Model Router**
-  - Implement `llm/providers.py` and `llm/router.py` with circuit breaker & fallback
-  - Implement verdict cache & rate limiting
-  - Unit tests for provider fallback and circuit breaker
+- [x] **Phase 2: ADK Graph Execution & Model Router**
+  - Implemented `llm/providers.py` with multi-tier provider chain (Gemini Pro/Flash, LiteLLM OpenRouter, LiteLLM Ollama)
+  - Implemented `llm/router.py` with circuit breaker, simulated outage support, privacy mode toggle, concurrency semaphore, and fail-safe rules fallback
+  - Implemented `server/cache.py` with deterministic message-hash caching
+  - Wrote `tests/test_router.py` with 4 comprehensive tests: outage fallback, cache hit deduplication, privacy mode local isolation, and circuit breaker cooldowns
+  - 14/14 tests in total passing
 - [ ] **Phase 3: FastAPI Backend & Approval Flow**
-  - Implement `server/store.py`, `server/cache.py`, `server/executor.py`
-  - Implement `server/main.py` (`/analyze`, `/analyze/stream` SSE, `/incidents/{id}/approve`, `/health`)
-  - Implement `server/control.py`
+  - Implement `server/store.py`, `server/executor.py`
+  - Implement `server/main.py` (`/analyze`, `/analyze/stream` SSE, `/incidents`, `/incidents/{id}/approve`, `/incidents/{id}/reject`, `/health`)
+  - Implement `server/control.py` control endpoints
+  - Integration tests for end-to-end API pipeline
 - [ ] **Phase 4 & 4b: Reflex Layer & Safety Harness**
   - Implement `triage/jev_client.py` (Jev -> Gemini Flash JSON -> rules fallback)
   - Implement `guardrails/` (input, tool, output, action guards)
