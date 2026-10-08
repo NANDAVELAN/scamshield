@@ -126,11 +126,13 @@ scamshield/
   - Implemented `server/cache.py` with deterministic message-hash caching
   - Wrote `tests/test_router.py` with 4 comprehensive tests: outage fallback, cache hit deduplication, privacy mode local isolation, and circuit breaker cooldowns
   - 14/14 tests in total passing
-- [ ] **Phase 3: FastAPI Backend & Approval Flow**
-  - Implement `server/store.py`, `server/executor.py`
-  - Implement `server/main.py` (`/analyze`, `/analyze/stream` SSE, `/incidents`, `/incidents/{id}/approve`, `/incidents/{id}/reject`, `/health`)
-  - Implement `server/control.py` control endpoints
-  - Integration tests for end-to-end API pipeline
+- [x] **Phase 3: FastAPI Backend & Approval Flow**
+  - Implemented `server/store.py` with in-memory incident persistence and append-only audit log
+  - Implemented `server/executor.py` enforcing non-destructive defense actions (`quarantine`, `block_sender`, `block_url`), action reversibility undo, and strict no-delete policy
+  - Implemented `server/main.py` with `/analyze`, `/analyze/stream` SSE live broadcast, `/incidents`, `/incidents/{id}/approve`, `/incidents/{id}/reject`, `/incidents/{id}/undo`, and `/health`
+  - Implemented `server/control.py` with `/control/state`, `/control/provider`, `/control/mode`, `/control/thresholds`, and `/control/clear-cache`
+  - Wrote integration test suite `tests/test_pipeline.py` verifying full end-to-end lifecycle
+  - **18/18 tests in total passing**
 - [ ] **Phase 4 & 4b: Reflex Layer & Safety Harness**
   - Implement `triage/jev_client.py` (Jev -> Gemini Flash JSON -> rules fallback)
   - Implement `guardrails/` (input, tool, output, action guards)
