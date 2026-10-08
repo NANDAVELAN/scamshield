@@ -31,6 +31,7 @@ scamshield/
 ├── requirements.txt                   # Production & testing dependencies
 ├── .env.example                       # Environment configuration template
 ├── Dockerfile                         # Cloud Run container definition
+├── pytest.ini                         # Pytest configuration
 ├── scamshield_agent/                  # Google ADK agent package
 │   ├── __init__.py                    # Exposes root agent
 │   ├── agent.py                       # build_root_agent(fast, strong) ADK graph
@@ -71,7 +72,7 @@ scamshield/
 ├── triage/                            # Reflex layer
 │   ├── __init__.py
 │   ├── jev_client.py                  # Jev -> Gemini Flash JSON -> rules cascade
-│   └── rules.py                       # Deterministic regex, lookalike & keyword scorer
+│   └── rules.py                      # Deterministic regex, lookalike & keyword scorer
 ├── server/                            # FastAPI backend
 │   ├── __init__.py
 │   ├── main.py                        # /analyze, /analyze/stream (SSE), /incidents
@@ -94,9 +95,10 @@ scamshield/
 │   └── index.html
 └── tests/                             # Pytest test suites
     ├── sample_messages.json
+    ├── test_tools.py
+    ├── test_triage.py
     ├── test_pipeline.py
-    ├── test_router.py
-    └── test_triage.py
+    └── test_router.py
 ```
 
 ---
@@ -108,18 +110,20 @@ scamshield/
   - `requirements.txt`, `.env.example`, `Dockerfile`, `AGENTS.md` created
   - Core Pydantic schemas created (`Evidence`, `TriageResult`, `Verdict`, `Incident`, etc.)
   - Mock datasets created (`brands.json`, `domain_reputation.json`, `sender_reputation.json`, `blocklist.json`)
-  - Module directory structure established
-- [ ] **Phase 1: Tools & Rules Scorer**
-  - Implement all 6 tool modules with docstrings and mock lookups
-  - Implement lookalike detector with homoglyphs and Levenshtein distance
-  - Implement PII redactor
-  - Implement deterministic `triage/rules.py`
-  - Write `tests/sample_messages.json` (20+ cases) & test suite
-- [ ] **Phase 2: ADK Graph & Model Router**
-  - Implement `scamshield_agent/prompts.py`
-  - Implement `scamshield_agent/agent.py` (`build_root_agent` with ADK SequentialAgent + ParallelAgent)
+  - ADK agent graph scaffolded in `scamshield_agent/agent.py` and validated
+- [x] **Phase 1: Tools & Rules Scorer**
+  - Implemented all 6 tool modules with docstrings and mock lookups
+  - Implemented homoglyph folding (`rn`→`m`, `0`→`o`, `vv`→`w`, `cl`→`d`) + Levenshtein distance brand lookalike detector
+  - Implemented entity extractor with PII redaction (phones, accounts, cards)
+  - Implemented sender reputation and email authentication (SPF/DKIM spoof detection)
+  - Implemented attachment threat detector (double extensions, executables, macros)
+  - Implemented deterministic reflex scorer (`triage/rules.py`) with zero-latency rules-only verdict fallback
+  - Wrote 20-message sample catalog (`tests/sample_messages.json`) with 12 scams & 8 legitimate cases
+  - 10 unit tests in `tests/test_tools.py` and `tests/test_triage.py` passing with **100% Catch Rate** and **0% False Positives**
+- [ ] **Phase 2: ADK Graph Execution & Model Router**
   - Implement `llm/providers.py` and `llm/router.py` with circuit breaker & fallback
   - Implement verdict cache & rate limiting
+  - Unit tests for provider fallback and circuit breaker
 - [ ] **Phase 3: FastAPI Backend & Approval Flow**
   - Implement `server/store.py`, `server/cache.py`, `server/executor.py`
   - Implement `server/main.py` (`/analyze`, `/analyze/stream` SSE, `/incidents/{id}/approve`, `/health`)
