@@ -23,6 +23,7 @@ from scamshield_agent.schemas import (
 )
 from scamshield_agent.tools.campaign_tools import link_campaign
 from triage.rules import score_rules
+from triage.jev_client import quick_triage
 from llm.router import router, analyze_with_router
 from .store import incident_store
 from .executor import executor
@@ -120,10 +121,10 @@ async def analyze_message(req: AnalyzeRequest):
     req_dict = req.model_dump()
     start_total = time.perf_counter()
 
-    # 1. Reflex triage (System One)
-    await broadcast_sse_event("triage", "reflex_gate", "start", "rules", 0)
+    # 1. Reflex triage (System One: Jev -> Flash JSON -> Rules)
+    await broadcast_sse_event("triage", "reflex_gate", "start", "active_reflex", 0)
     t_start = time.perf_counter()
-    triage_res = score_rules(req_dict)
+    triage_res = await quick_triage(req_dict)
     t_latency = int((time.perf_counter() - t_start) * 1000)
     await broadcast_sse_event(
         "triage", "reflex_gate", "done", triage_res.source, t_latency,

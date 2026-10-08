@@ -8,6 +8,7 @@ from scamshield_agent.tools.sender_tools import get_sender_reputation, check_ema
 from scamshield_agent.tools.attachment_tools import analyze_attachment
 from scamshield_agent.tools.entities import extract_entities
 from guardrails.defang import defang
+from guardrails.input_guard import detect_injection
 
 SCAM_PATTERNS = {
     "fake_kyc": [
@@ -138,6 +139,12 @@ def score_rules(message: Dict[str, Any]) -> TriageResult:
     if urgency >= 6:
         risk_score += 15
 
+    # Prompt Injection Detector (Layer 1 Input Guardrail)
+    has_inj, _ = detect_injection(full_text)
+    if has_inj:
+        risk_score += 65
+        detected_type = "prompt_injection"
+
     # Mitigating factors for legitimate messages
     if auth_check.get("auth_passed", False):
         # Officially authenticated sender
@@ -225,6 +232,17 @@ def rules_only_verdict(message: Dict[str, Any]) -> Verdict:
                 finding=f"Malicious attachment detected: {', '.join(att_eval.get('reasons', []))}",
                 weight=0.95
             ))
+
+    # Injection evidence
+    full_msg_text = f"{message.get('subject', '')} {message.get('body', '')}"
+    has_inj, patterns = detect_injection(full_msg_text)
+    if has_inj:
+        evidence.append(Evidence(
+            source_tool="detect_injection",
+            finding="Prompt injection attempt targeting AI instructions detected",
+            weight=0.99
+        ))
+        risk_score = max(risk_score, 85)
 
     # Label assignment
     if risk_score >= 75:

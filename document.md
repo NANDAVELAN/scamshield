@@ -98,7 +98,8 @@ scamshield/
     ├── test_tools.py
     ├── test_triage.py
     ├── test_pipeline.py
-    └── test_router.py
+    ├── test_router.py
+    └── test_harness.py
 ```
 
 ---
@@ -132,11 +133,16 @@ scamshield/
   - Implemented `server/main.py` with `/analyze`, `/analyze/stream` SSE live broadcast, `/incidents`, `/incidents/{id}/approve`, `/incidents/{id}/reject`, `/incidents/{id}/undo`, and `/health`
   - Implemented `server/control.py` with `/control/state`, `/control/provider`, `/control/mode`, `/control/thresholds`, and `/control/clear-cache`
   - Wrote integration test suite `tests/test_pipeline.py` verifying full end-to-end lifecycle
-  - **18/18 tests in total passing**
-- [ ] **Phase 4 & 4b: Reflex Layer & Safety Harness**
-  - Implement `triage/jev_client.py` (Jev -> Gemini Flash JSON -> rules fallback)
-  - Implement `guardrails/` (input, tool, output, action guards)
-  - Implement `harness/` with invariants I1–I8 and adversarial tests
+- [x] **Phase 4 & 4b: Reflex Layer & Safety Harness**
+  - Implemented `triage/jev_client.py` with cascading fallback: Jev System One -> Gemini Flash JSON schema -> rules
+  - Wired quick reflex gate into `server/main.py` `/analyze` endpoint
+  - Implemented 5 deterministic guardrail layers in `guardrails/` (input, tool, output, action, runtime)
+  - Built safety harness in `harness/` with:
+    - `harness/suites/golden.json` (20 cases: 12 scams, 8 legitimate) -> **100.0% Catch Rate, 0.0% False Positives**
+    - `harness/suites/adversarial.json` (15 attack vectors) -> **15/15 Defended (100.0%)**
+    - `harness/invariants.py` verifying **all Invariants I1 through I8**
+    - `harness/run.py` CLI generating JSON and HTML reports and enforcing zero-tolerance exits
+  - **21/21 pytest tests passing**
 - [ ] **Phase 5 & 6: Chrome MV3 Extension, Simulator & Control Center UI**
   - Extension with Gmail tag and URL interception
   - Message simulator
