@@ -1,0 +1,33 @@
+{
+  "domains": [
+    "sbi-kyc-update.in",
+    "hdfc-netbanking-verify.xyz",
+    "amazon-gift-winner.top",
+    "indiapost-tracking-fail.info",
+    "bescom-bill-pay.click",
+    "paytm-refund-support.online",
+    "mumbaipolice-arrest-notice.me",
+    "netflix-payment-failed.vip",
+    "free-recharge-offer.cc",
+    "lottery-winner-claim.biz"
+  ],
+  "senders": [
+    "+91-90000-12345",
+    "+91-98765-43210",
+    "+91-99887-76655",
+    "+91-91234-56789",
+    "alerts@sbi-kyc-update.in",
+    "support@hdfc-netbanking-verify.xyz"
+  ],
+  "suspicious_keywords": [
+    "kyc expired",
+    "electricity will be disconnected",
+    "digital arrest",
+    "customs seized parcel",
+    "upi refund pending",
+    "lottery winner",
+    "part time job daily 5000",
+    "account suspended immediately",
+    "click link to verify"
+  ]
+}

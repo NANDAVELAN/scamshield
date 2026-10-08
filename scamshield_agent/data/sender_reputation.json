@@ -1,0 +1,50 @@
+{
+  "+91-90000-12345": {
+    "reports": 128,
+    "tag": "known_scam_sender"
+  },
+  "+91-98765-43210": {
+    "reports": 95,
+    "tag": "known_scam_sender"
+  },
+  "+91-80123-45678": {
+    "reports": 0,
+    "tag": "personal_number"
+  },
+  "+91-99887-76655": {
+    "reports": 142,
+    "tag": "fake_courier_caller"
+  },
+  "+91-91234-56789": {
+    "reports": 87,
+    "tag": "digital_arrest_impersonator"
+  },
+  "alerts@sbi-kyc-update.in": {
+    "reports": 64,
+    "tag": "known_phishing_address"
+  },
+  "support@hdfc-netbanking-verify.xyz": {
+    "reports": 81,
+    "tag": "known_phishing_address"
+  },
+  "alerts@sbi.co.in": {
+    "reports": 0,
+    "tag": "verified_sender"
+  },
+  "alerts@hdfcbank.net": {
+    "reports": 0,
+    "tag": "verified_sender"
+  },
+  "no-reply@amazon.in": {
+    "reports": 0,
+    "tag": "verified_sender"
+  },
+  "orders@flipkart.com": {
+    "reports": 0,
+    "tag": "verified_sender"
+  },
+  "billing@bescom-bill-pay.click": {
+    "reports": 56,
+    "tag": "known_phishing_address"
+  }
+}

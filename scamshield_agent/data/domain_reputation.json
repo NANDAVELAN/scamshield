@@ -1,0 +1,72 @@
+{
+  "sbi-kyc-update.in": {
+    "age_days": 2,
+    "tag": "newly_registered",
+    "reports": 41
+  },
+  "sbi.co.in": {
+    "age_days": 9000,
+    "tag": "verified_brand",
+    "reports": 0
+  },
+  "hdfc-netbanking-verify.xyz": {
+    "age_days": 1,
+    "tag": "suspicious",
+    "reports": 89
+  },
+  "hdfcbank.com": {
+    "age_days": 8500,
+    "tag": "verified_brand",
+    "reports": 0
+  },
+  "amazon-gift-winner.top": {
+    "age_days": 3,
+    "tag": "suspicious",
+    "reports": 112
+  },
+  "amazon.in": {
+    "age_days": 7000,
+    "tag": "verified_brand",
+    "reports": 0
+  },
+  "indiapost-tracking-fail.info": {
+    "age_days": 4,
+    "tag": "newly_registered",
+    "reports": 65
+  },
+  "indiapost.gov.in": {
+    "age_days": 8000,
+    "tag": "verified_brand",
+    "reports": 0
+  },
+  "bescom-bill-pay.click": {
+    "age_days": 2,
+    "tag": "suspicious",
+    "reports": 78
+  },
+  "paytm-refund-support.online": {
+    "age_days": 5,
+    "tag": "suspicious",
+    "reports": 53
+  },
+  "mumbaipolice-arrest-notice.me": {
+    "age_days": 1,
+    "tag": "suspicious",
+    "reports": 94
+  },
+  "netflix-payment-failed.vip": {
+    "age_days": 6,
+    "tag": "newly_registered",
+    "reports": 37
+  },
+  "google.com": {
+    "age_days": 10000,
+    "tag": "verified_brand",
+    "reports": 0
+  },
+  "icicibank.com": {
+    "age_days": 8000,
+    "tag": "verified_brand",
+    "reports": 0
+  }
+}
