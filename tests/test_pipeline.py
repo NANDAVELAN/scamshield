@@ -148,4 +148,25 @@ def test_fedex_narcotics_courier_simulation():
     evidence_tools = [e["source_tool"] for e in verdict["evidence"]]
     assert "check_lookalike" in evidence_tools or "threat_intelligence" in evidence_tools
 
+def test_simulator_and_phone_app_static_endpoints():
+    """Verify both Simulator and Phone Application web endpoints resolve properly."""
+    # Root redirect
+    root_resp = client.get("/", follow_redirects=False)
+    assert root_resp.status_code in (307, 302, 200)
+
+    # Simulator static assets
+    sim_resp = client.get("/simulator/", follow_redirects=True)
+    assert sim_resp.status_code == 200
+    assert "ScamShield" in sim_resp.text
+
+    # Phone application static assets
+    app_resp = client.get("/app/", follow_redirects=True)
+    assert app_resp.status_code == 200
+    assert "ScamShield" in app_resp.text
+
+    app_file_resp = client.get("/app/index.html")
+    assert app_file_resp.status_code == 200
+    assert "ScamShield" in app_file_resp.text
+
+
 

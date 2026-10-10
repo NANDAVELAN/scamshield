@@ -54,8 +54,8 @@ fi
 if command -v cmd.exe > /dev/null 2>&1; then
     PID_8080=$(netstat -ano 2>/dev/null | grep ":8080 " | grep "LISTENING" | awk '{print $5}' | head -n 1 || true)
     if [ -n "$PID_8080" ] && [ "$PID_8080" != "0" ]; then
-        echo "[!] Port 8080 is currently occupied by PID $PID_8080. Freeing port..."
-        cmd.exe /c "taskkill /F /PID $PID_8080" >/dev/null 2>&1 || true
+        echo "[!] Port 8080 is currently occupied by PID $PID_8080. Freeing port and worker tree..."
+        cmd.exe /c "taskkill /F /T /PID $PID_8080" >/dev/null 2>&1 || true
         sleep 1
     fi
 elif command -v lsof > /dev/null 2>&1; then
@@ -71,8 +71,9 @@ SIMULATOR_URL="http://127.0.0.1:8080/simulator"
 
 echo ""
 echo "Active URLs:"
-echo "   - Message Simulator:      $SIMULATOR_URL"
-echo "   - OpenAPI Docs:           http://127.0.0.1:8080/docs"
+echo "   - Message Simulator:        $SIMULATOR_URL"
+echo "   - Phone Application (Web):  http://127.0.0.1:8080/app"
+echo "   - OpenAPI Docs:             http://127.0.0.1:8080/docs"
 echo ""
 
 # Try opening default browser in background (cross-platform)

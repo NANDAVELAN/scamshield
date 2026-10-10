@@ -4,8 +4,8 @@
 $ErrorActionPreference = "Stop"
 
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "🛡️  ScamShield — AI Inbox Immune System" -ForegroundColor Cyan
-Write-Host "   Starting Cognitive Defense Engine & Operator UI" -ForegroundColor DarkCyan
+Write-Host "[*] ScamShield - AI Inbox Immune System" -ForegroundColor Cyan
+Write-Host "   Starting Cognitive Defense Engine and Message Simulator" -ForegroundColor DarkCyan
 Write-Host "============================================================" -ForegroundColor Cyan
 
 # 1. Resolve Project Root
@@ -35,16 +35,19 @@ if (-not (Test-Path $VenvPython)) {
 $ExistingProcess = Get-NetTCPConnection -LocalPort 8080 -State Listen -ErrorAction SilentlyContinue
 if ($ExistingProcess) {
     $PidToStop = $ExistingProcess.OwningProcess
-    Write-Host "[!] Port 8080 is currently occupied by PID $PidToStop. Terminating old instance..." -ForegroundColor Yellow
+    Write-Host "[!] Port 8080 is currently occupied by PID $PidToStop. Terminating old instance and worker tree..." -ForegroundColor Yellow
+    cmd.exe /c "taskkill /F /T /PID $PidToStop" >$null 2>&1
     Stop-Process -Id $PidToStop -Force -ErrorAction SilentlyContinue
     Start-Sleep -Seconds 1
 }
 
 Write-Host ""
 Write-Host ">> Active Operator URLs:" -ForegroundColor Green
-Write-Host "   - Message Simulator:      " -NoNewline -ForegroundColor White
+Write-Host "   - Message Simulator:        " -NoNewline -ForegroundColor White
 Write-Host "http://127.0.0.1:8080/simulator" -ForegroundColor Cyan
-Write-Host "   - Swagger OpenAPI Docs:   " -NoNewline -ForegroundColor White
+Write-Host "   - Phone Application (Web):  " -NoNewline -ForegroundColor White
+Write-Host "http://127.0.0.1:8080/app" -ForegroundColor Cyan
+Write-Host "   - Swagger OpenAPI Docs:     " -NoNewline -ForegroundColor White
 Write-Host "http://127.0.0.1:8080/docs" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "[+] Launching web browser to Message Simulator in 2 seconds..." -ForegroundColor DarkGray

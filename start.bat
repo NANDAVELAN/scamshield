@@ -25,8 +25,9 @@ if not exist ".venv\Scripts\python.exe" (
 
 echo.
 echo Active URLs:
-echo   - Attack Simulator:      http://127.0.0.1:8080/simulator
-echo   - OpenAPI Docs:          http://127.0.0.1:8080/docs
+echo   - Attack Simulator:        http://127.0.0.1:8080/simulator
+echo   - Phone Application (Web):  http://127.0.0.1:8080/app
+echo   - OpenAPI Docs:             http://127.0.0.1:8080/docs
 echo.
 
 REM Automatically open default browser after short delay

@@ -291,3 +291,8 @@ async def root_redirect():
 simulator_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "simulator")
 if os.path.exists(simulator_dir):
     app.mount("/simulator", StaticFiles(directory=simulator_dir, html=True), name="simulator")
+
+# Static files for Phone Web Application
+phone_app_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "app", "www")
+if os.path.exists(phone_app_dir):
+    app.mount("/app", StaticFiles(directory=phone_app_dir, html=True), name="phone_app")
