@@ -191,8 +191,8 @@ function injectWarningBanner(data) {
 
   banner.innerHTML = `
     <div class="scamshield-banner-header">
-      <span>🛡️ ScamShield Verdict: ${data.verdict.label.toUpperCase()} (Risk Score: ${data.verdict.risk_score}/100)</span>
-      <span>Provider: ${data.provider_used}</span>
+      <span>🛡️ ScamShield Verdict: ${(data.verdict?.label || "unknown").toUpperCase()} (Risk Score: ${data.verdict?.risk_score ?? 0}/100)</span>
+      <span>Provider: ${data.provider_used || "rules"}</span>
     </div>
     <p style="margin: 6px 0; font-size: 13px;">${data.verdict.explanation_en}</p>
     ${evidenceHtml ? `<div style="margin-top: 8px;"><b>Evidence Trail:</b>${evidenceHtml}</div>` : ""}

@@ -19,12 +19,6 @@ def get_provider_chain() -> List[Dict[str, Any]]:
             "cloud": True
         },
         {
-            "name": "openrouter",
-            "cloud": True,
-            "fast": LiteLlm(model=os.getenv("OPENROUTER_FAST_MODEL", "openrouter/google/gemini-2.0-flash-001")),
-            "strong": LiteLlm(model=os.getenv("OPENROUTER_STRONG_MODEL", "openrouter/google/gemini-2.0-flash-001"))
-        },
-        {
             "name": "ollama",
             "cloud": False,
             "fast": LiteLlm(model=os.getenv("OLLAMA_MODEL", "ollama_chat/qwen2.5:7b")),

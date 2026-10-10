@@ -46,5 +46,19 @@
   "billing@bescom-bill-pay.click": {
     "reports": 56,
     "tag": "known_phishing_address"
+  },
+  "FEDEX-INDIA": {
+    "reports": 92,
+    "tag": "fake_courier_spoof"
+  },
+  "HDFCBK": {
+    "reports": 0,
+    "tag": "verified_bank_sender"
+  },
+  "CBI-HQ-OFFICER": {
+    "reports": 115,
+    "tag": "fake_law_enforcement_spoof"
   }
 }
+
+

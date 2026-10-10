@@ -5,8 +5,12 @@
   "Amazon": ["amazon.in", "amazon.com"],
   "Flipkart": ["flipkart.com"],
   "India Post": ["indiapost.gov.in", "ippbonline.com"],
+  "FedEx": ["fedex.com", "fedex.in", "fedex.co.in"],
+  "BlueDart": ["bluedart.com"],
+  "DHL": ["dhl.com", "dhl.co.in"],
   "BESCOM": ["bescom.karnataka.gov.in", "bescom.co.in"],
   "Paytm": ["paytm.com"],
   "Netflix": ["netflix.com"],
   "Mumbai Police": ["mumbaipolice.gov.in"]
 }
+

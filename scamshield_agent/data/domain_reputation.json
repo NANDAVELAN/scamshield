@@ -68,5 +68,16 @@
     "age_days": 8000,
     "tag": "verified_brand",
     "reports": 0
+  },
+  "fedx-customs-pay.in": {
+    "age_days": 1,
+    "tag": "newly_registered",
+    "reports": 88
+  },
+  "fedex.com": {
+    "age_days": 10000,
+    "tag": "verified_brand",
+    "reports": 0
   }
 }
+

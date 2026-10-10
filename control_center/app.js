@@ -148,7 +148,7 @@ async function fetchInitialState() {
     const sysStatusText = document.getElementById("sys-status-text");
     const sysProviderText = document.getElementById("sys-provider-text");
 
-    pillAutonomy.textContent = `Autonomy: ${state.autonomy_mode.toUpperCase()}`;
+    pillAutonomy.textContent = `Autonomy: ${(state.autonomy_mode || "manual").toUpperCase()}`;
     pillPrivacy.textContent = `Privacy: ${state.privacy_mode ? "ON (LOCAL)" : "OFF"}`;
     pillPrivacy.style.color = state.privacy_mode ? "var(--emerald)" : "var(--cyan)";
 
@@ -320,23 +320,23 @@ function appendTermLog(text, type = "info") {
 
 function renderAnalysisResult(data) {
   const box = document.getElementById("ana-result-box");
-  const verdict = data.verdict;
-  const score = verdict.risk_score;
+  const verdict = data?.verdict || {};
+  const score = verdict.risk_score !== undefined ? verdict.risk_score : 0;
 
   box.style.display = "block";
 
   const isThreat = score >= 60;
-  const isSuspicious = score >= 35 && score < 60;
+  const isSuspicious = score >= 30 && score < 60;
 
   const badge = document.getElementById("res-badge");
-  badge.textContent = verdict.label.toUpperCase();
+  badge.textContent = String(verdict.label || "unknown").toUpperCase();
   badge.className = `verdict-label-badge ${isThreat ? "badge-scam" : (isSuspicious ? "badge-suspicious" : "badge-safe")}`;
 
   document.getElementById("res-title").textContent = isThreat ? "Scam Threat Intercepted" : (isSuspicious ? "Suspicious Activity Detected" : "Message Verified Safe");
   document.getElementById("res-score").textContent = score;
-  document.getElementById("res-provider").textContent = data.provider_used;
-  document.getElementById("res-cache-pill").textContent = data.cache_hit ? "Cache: HIT" : "Cache: Miss";
-  document.getElementById("res-explanation").textContent = verdict.explanation_en;
+  document.getElementById("res-provider").textContent = data?.provider_used || "rules";
+  document.getElementById("res-cache-pill").textContent = data?.cache_hit ? "Cache: HIT" : "Cache: Miss";
+  document.getElementById("res-explanation").textContent = verdict.explanation_en || "No explanation provided.";
 
   // Defanged preview
   const defangedBox = document.getElementById("res-defanged-box");
@@ -368,9 +368,10 @@ function renderAnalysisResult(data) {
   const btnReject = document.getElementById("res-btn-reject");
   const btnUndo = document.getElementById("res-btn-undo");
 
-  if (verdict.recommended_action && verdict.recommended_action !== "none" && verdict.recommended_action !== "allow") {
+  const recAction = String(verdict.recommended_action || "none");
+  if (recAction && recAction !== "none" && recAction !== "allow") {
     actionBar.style.display = "flex";
-    actionText.textContent = verdict.recommended_action.toUpperCase() + " (Non-destructive)";
+    actionText.textContent = recAction.toUpperCase() + " (Non-destructive)";
     btnApprove.style.display = "inline-flex";
     btnReject.style.display = "inline-flex";
     btnUndo.style.display = "none";
@@ -425,9 +426,9 @@ function renderIncidentsList() {
   let filtered = cachedIncidents.filter(inc => {
     if (currentFilter !== "all" && inc.status !== currentFilter) return false;
     if (query) {
-      const matchId = inc.incident_id.toLowerCase().includes(query);
-      const matchSender = (inc.sender || "").toLowerCase().includes(query);
-      const matchBody = (inc.body || "").toLowerCase().includes(query);
+      const matchId = String(inc.incident_id || "").toLowerCase().includes(query);
+      const matchSender = String(inc.sender || "").toLowerCase().includes(query);
+      const matchBody = String(inc.body || "").toLowerCase().includes(query);
       return matchId || matchSender || matchBody;
     }
     return true;
@@ -444,10 +445,10 @@ function renderIncidentsList() {
   }
 
   container.innerHTML = filtered.map(inc => {
-    const score = inc.verdict.risk_score;
-    const scoreClass = score >= 60 ? "high" : (score >= 35 ? "med" : "low");
+    const score = inc.verdict ? (inc.verdict.risk_score ?? 0) : 0;
+    const scoreClass = score >= 60 ? "high" : (score >= 30 ? "med" : "low");
     const statusTagClass = inc.status === "pending_approval" ? "tag-pending" : (inc.status === "approved" || inc.status === "auto_executed" ? "tag-approved" : "tag-rejected");
-    const timeStr = new Date(inc.created_at * 1000).toLocaleTimeString();
+    const timeStr = new Date((inc.created_at || Date.now() / 1000) * 1000).toLocaleTimeString();
 
     return `
       <div class="incident-card" id="inc-card-${inc.incident_id}">
@@ -459,8 +460,8 @@ function renderIncidentsList() {
           <div class="inc-details">
             <div class="inc-id-row">
               <span class="inc-id">${inc.incident_id}</span>
-              <span class="inc-status-tag ${statusTagClass}">${inc.status.replace("_", " ")}</span>
-              <span class="inc-meta">${inc.channel.toUpperCase()} · ${timeStr} · Provider: ${inc.provider_used}</span>
+              <span class="inc-status-tag ${statusTagClass}">${String(inc.status || "pending").replace("_", " ")}</span>
+              <span class="inc-meta">${String(inc.channel || "email").toUpperCase()} · ${timeStr} · Provider: ${inc.provider_used || "rules"}</span>
             </div>
             <div class="inc-summary">${escapeHtml(inc.body)}</div>
           </div>
@@ -500,7 +501,7 @@ window.handleIncidentAction = handleIncidentAction;
  * ------------------------------------------------------------- */
 function initMissionControl() {
   const btnOutageGemini = document.getElementById("btn-outage-gemini");
-  const btnOutageOpenRouter = document.getElementById("btn-outage-openrouter");
+  const btnOutageOllama = document.getElementById("btn-outage-ollama");
   const btnResetOutages = document.getElementById("btn-reset-outages");
   const forceProviderSelect = document.getElementById("ctrl-force-provider");
   const autonomyRadios = document.querySelectorAll("input[name='autonomy_mode']");
@@ -509,14 +510,18 @@ function initMissionControl() {
   const btnClearCache = document.getElementById("btn-clear-cache");
 
   btnOutageGemini.addEventListener("click", () => toggleOutage(["gemini_flash", "gemini_pro"], btnOutageGemini));
-  btnOutageOpenRouter.addEventListener("click", () => toggleOutage(["openrouter"], btnOutageOpenRouter));
+  if (btnOutageOllama) {
+    btnOutageOllama.addEventListener("click", () => toggleOutage(["ollama"], btnOutageOllama));
+  }
 
   btnResetOutages.addEventListener("click", async () => {
     simulatedOutages.clear();
     btnOutageGemini.classList.remove("btn-danger");
     btnOutageGemini.textContent = "Simulate Outage";
-    btnOutageOpenRouter.classList.remove("btn-danger");
-    btnOutageOpenRouter.textContent = "Simulate Outage";
+    if (btnOutageOllama) {
+      btnOutageOllama.classList.remove("btn-danger");
+      btnOutageOllama.textContent = "Simulate Outage";
+    }
     await fetch(`${BACKEND_URL}/control/provider`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -669,15 +674,15 @@ async function fetchAuditTrail() {
     }
 
     tbody.innerHTML = logs.map(entry => {
-      const timeStr = new Date(entry.timestamp * 1000).toLocaleString();
+      const timeStr = new Date((entry.timestamp || Date.now() / 1000) * 1000).toLocaleString();
       return `
         <tr>
           <td class="code-font">${timeStr}</td>
-          <td><b>${entry.action.toUpperCase()}</b></td>
-          <td class="code-font">${entry.incident_id}</td>
-          <td><span class="tag-sm">${entry.actor}</span></td>
+          <td><b>${String(entry.action || "none").toUpperCase()}</b></td>
+          <td class="code-font">${entry.incident_id || ""}</td>
+          <td><span class="tag-sm">${entry.actor || "system"}</span></td>
           <td>${escapeHtml(entry.target || "")}</td>
-          <td><span class="badge badge-success">${entry.status.toUpperCase()}</span></td>
+          <td><span class="badge badge-success">${String(entry.status || "success").toUpperCase()}</span></td>
         </tr>
       `;
     }).join("");

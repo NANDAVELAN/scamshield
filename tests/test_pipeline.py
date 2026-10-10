@@ -129,3 +129,54 @@ def test_control_harness_and_static_ui():
     assert sim_resp.status_code == 200
     assert "Simulator" in sim_resp.text
 
+def test_analyze_triage_contract_and_safe_serialization():
+    """Regression test: Ensure /analyze response guarantees non-null string fields for triage and verdict."""
+    payload = {
+        "channel": "sms",
+        "sender": "VM-SBIINB",
+        "body": "Dear SBI Customer, your YONO account is locked. Update KYC immediately or account will be suspended in 24 hours.",
+        "urls": ["http://sbi-kyc-update.com/app"],
+        "attachments": [{"name": "Yono_Update.apk", "size_kb": 0}]
+    }
+    resp = client.post("/analyze", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+
+    # Triage contract for frontend rendering
+    triage = data.get("triage")
+    assert triage is not None
+    assert "status" in triage
+    assert isinstance(triage["status"], str)
+    assert triage["status"].lower() in ("escalated", "passed")
+    assert "scam_probability" in triage
+
+    # Verdict contract
+    verdict = data.get("verdict")
+    assert verdict is not None
+    assert isinstance(verdict.get("label"), str)
+    assert isinstance(verdict.get("recommended_action"), str)
+    assert isinstance(verdict.get("risk_score"), int)
+
+def test_fedex_narcotics_courier_simulation():
+    """Verify FedEx illegal narcotics simulation achieves high risk score and quarantine."""
+    payload = {
+        "channel": "sms",
+        "sender": "FEDEX-INDIA",
+        "body": "FedEx Alert: Parcel #FDX-99812 detained at Mumbai Customs due to unpaid clearance duty and illegal narcotics. Pay Rs. 2,499 immediately to avoid police seizure: http://fedx-customs-pay.in/release",
+        "urls": ["http://fedx-customs-pay.in/release"],
+        "attachments": []
+    }
+    resp = client.post("/analyze", json=payload)
+    assert resp.status_code == 200
+    data = resp.json()
+    verdict = data["verdict"]
+
+    assert verdict["risk_score"] >= 80
+    assert verdict["label"] in ("scam", "likely_scam")
+    assert verdict["recommended_action"] == "quarantine"
+    assert len(verdict["evidence"]) >= 3
+    # Check for brand lookalike or extortion intelligence
+    evidence_tools = [e["source_tool"] for e in verdict["evidence"]]
+    assert "check_lookalike" in evidence_tools or "threat_intelligence" in evidence_tools
+
+

@@ -247,12 +247,12 @@
             <div class="card-header">
               <h3>Model Routing & Outage Simulator</h3>
             </div>
-            <p class="card-desc">Simulate provider blackouts to verify graceful fallback (Gemini → OpenRouter → Ollama → Rules).</p>
+            <p class="card-desc">Simulate provider blackouts to verify graceful fallback (Gemini Pro → Ollama Local → Rules).</p>
 
             <div class="provider-status-list">
               <div class="provider-row">
                 <div class="provider-info">
-                  <strong>Gemini Flash / Pro</strong>
+                  <strong>Gemini Pro / Flash</strong>
                   <span>Primary Cloud Provider</span>
                 </div>
                 <button class="btn btn-sm btn-outline btn-outage" data-provider="gemini_flash,gemini_pro" id="btn-outage-gemini">
@@ -262,20 +262,12 @@
 
               <div class="provider-row">
                 <div class="provider-info">
-                  <strong>OpenRouter (Claude / DeepSeek)</strong>
-                  <span>Secondary Cloud Fallback</span>
-                </div>
-                <button class="btn btn-sm btn-outline btn-outage" data-provider="openrouter" id="btn-outage-openrouter">
-                  Simulate Outage
-                </button>
-              </div>
-
-              <div class="provider-row">
-                <div class="provider-info">
-                  <strong>Ollama (Local Llama 3)</strong>
+                  <strong>Ollama (Local Qwen / Llama)</strong>
                   <span>Air-Gapped / Privacy Fallback</span>
                 </div>
-                <span class="status-tag tag-healthy">Available</span>
+                <button class="btn btn-sm btn-outline btn-outage" data-provider="ollama" id="btn-outage-ollama">
+                  Simulate Outage
+                </button>
               </div>
 
               <div class="provider-row">
@@ -294,7 +286,6 @@
                   <option value="">Auto (Default Intelligent Fallback)</option>
                   <option value="gemini_flash">Force Gemini Flash</option>
                   <option value="gemini_pro">Force Gemini Pro</option>
-                  <option value="openrouter">Force OpenRouter</option>
                   <option value="ollama">Force Ollama (Local)</option>
                   <option value="rules">Force Rules Only (Zero AI)</option>
                 </select>
@@ -497,6 +488,6 @@
     </main>
   </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=2.1"></script>
 </body>
 </html>

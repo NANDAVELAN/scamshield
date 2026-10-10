@@ -13,6 +13,8 @@ class TriageResult(BaseModel):
     impersonates_brand: float = Field(ge=0, le=1)
     source: Literal["jev", "gemini_flash", "rules"]
     latency_ms: int
+    status: Optional[str] = Field(default="escalated")
+    reason: Optional[str] = Field(default=None)
 
 class Verdict(BaseModel):
     risk_score: int = Field(ge=0, le=100)

@@ -56,8 +56,8 @@ document.addEventListener("DOMContentLoaded", () => {
       scanResult.style.color = isDangerous ? "#fca5a5" : "#86efac";
       scanResult.style.border = `1px solid ${isDangerous ? "#ef4444" : "#22c55e"}`;
       scanResult.innerHTML = `
-        <strong>${data.verdict.label.toUpperCase()} (${data.verdict.risk_score}/100)</strong><br>
-        ${data.verdict.explanation_en.slice(0, 100)}...
+        <strong>${(data.verdict?.label || "unknown").toUpperCase()} (${data.verdict?.risk_score ?? 0}/100)</strong><br>
+        ${(data.verdict?.explanation_en || "").slice(0, 100)}...
       `;
 
       chrome.storage.local.get({ recent_verdicts: [] }, (res) => {
@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
     recentList.innerHTML = items.slice(0, 4).map(item => {
       const v = item.verdict;
       const score = v.risk_score;
-      const pillClass = score >= 60 ? "risk-high" : (score >= 35 ? "risk-med" : "risk-low");
+      const pillClass = score >= 60 ? "risk-high" : (score >= 30 ? "risk-med" : "risk-low");
       const summary = (item.incident_id || "Scan").slice(0, 14);
       return `
         <div class="recent-item">

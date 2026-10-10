@@ -24,16 +24,22 @@ def get_sender_reputation(sender: str) -> Dict[str, Any]:
     clean_sender = sender.lower().strip()
     db = _load_sender_db()
 
-    # Exact or substring match
+    import re
+    digits_clean = re.sub(r"\D", "", clean_sender)
+
+    # Exact, substring, or normalized phone digit match
     for s_key, data in db.items():
-        if s_key.lower() == clean_sender or clean_sender in s_key.lower() or s_key.lower() in clean_sender:
+        digits_key = re.sub(r"\D", "", s_key)
+        phone_match = (len(digits_key) >= 10 and len(digits_clean) >= 10 and digits_key[-10:] == digits_clean[-10:])
+        if s_key.lower() == clean_sender or clean_sender in s_key.lower() or s_key.lower() in clean_sender or phone_match:
             return {
                 "status": "success",
                 "sender": sender,
                 "reports": data.get("reports", 0),
                 "tag": data.get("tag", "unknown"),
-                "is_malicious": data.get("reports", 0) > 10 or "scam" in data.get("tag", "") or "phishing" in data.get("tag", "")
+                "is_malicious": data.get("reports", 0) > 10 or "scam" in data.get("tag", "") or "phishing" in data.get("tag", "") or "spoof" in data.get("tag", "")
             }
+
 
     return {
         "status": "success",

@@ -94,21 +94,29 @@ def check_lookalike(domain: str) -> Dict[str, Any]:
                 "details": f"Unauthorized domain containing brand name '{brand}'"
             }
 
-        # Check edit distance against official root domains
+        # Check edit distance against official root domains (full SLD and hyphenated sub-tokens)
+        clean_sld = clean_domain.split(".")[0]
+        subtokens = [tok for tok in re.split(r"[-_.]+", clean_sld) if len(tok) >= 3]
+        candidate_tokens = [clean_sld] + subtokens
+
         for off_dom in official_domains:
-            off_sld = off_dom.split(".")[0]
-            clean_sld = clean_domain.split(".")[0]
-            dist = levenshtein_distance(clean_sld, off_sld)
-            if 0 < dist <= 2 and len(off_sld) >= 4:
-                return {
-                    "status": "success",
-                    "domain": clean_domain,
-                    "is_lookalike": True,
-                    "is_official": False,
-                    "target_brand": brand,
-                    "similarity_score": 1.0 - (dist / max(len(clean_sld), len(off_sld))),
-                    "details": f"Lookalike domain closely matching official domain '{off_dom}' (distance={dist})"
-                }
+            off_sld = off_dom.split(".")[0].lower()
+            if len(off_sld) < 4:
+                continue
+
+            for tok in candidate_tokens:
+                dist = levenshtein_distance(tok, off_sld)
+                max_dist = 2 if len(off_sld) >= 6 else 1
+                if 0 < dist <= max_dist:
+                    return {
+                        "status": "success",
+                        "domain": clean_domain,
+                        "is_lookalike": True,
+                        "is_official": False,
+                        "target_brand": brand,
+                        "similarity_score": round(1.0 - (dist / max(len(tok), len(off_sld))), 2),
+                        "details": f"Lookalike domain/token '{tok}' closely matching official domain '{off_dom}' (distance={dist})"
+                    }
 
     return {
         "status": "success",
@@ -181,14 +189,18 @@ def check_blocklist(target: str) -> Dict[str, Any]:
             }
 
     # Check senders
+    digits_target = re.sub(r"\D", "", clean_target)
     for bs in blocked_senders:
-        if bs in clean_target:
+        digits_bs = re.sub(r"\D", "", bs)
+        phone_match = (len(digits_bs) >= 10 and len(digits_target) >= 10 and digits_bs[-10:] == digits_target[-10:])
+        if bs in clean_target or phone_match:
             return {
                 "status": "success",
                 "target": target,
                 "is_blocked": True,
                 "reason": f"Matched blocked scam sender '{bs}'"
             }
+
 
     return {
         "status": "success",

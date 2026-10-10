@@ -77,7 +77,7 @@ def main():
     print(f"  [PASS] Rehearsal 2c: Both actions recorded in audit log ({len(audit['audit_log'])} entries)")
 
     # 3. Provider outage simulation -> falls back to rules/ollama and reports provider used
-    post("/control/provider", {"simulate_outage": ["gemini_flash", "gemini_pro", "openrouter"]})
+    post("/control/provider", {"simulate_outage": ["gemini_flash", "gemini_pro", "ollama"]})
     res3 = post("/analyze", scam1)
     print("  [PASS] Rehearsal 3: Outage simulated. Fallback succeeded!")
     print(f"      Provider Used: {res3['provider_used']} (Expected: rules or ollama)")

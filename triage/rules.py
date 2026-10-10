@@ -20,7 +20,8 @@ SCAM_PATTERNS = {
     ],
     "courier": [
         r'\bparcel\b', r'\bpackage\b', r'\bcustoms\b', r'\bdelivery fee\b',
-        r'\bwrong address\b', r'\bindia post\b'
+        r'\bwrong address\b', r'\bindia post\b', r'\bfedex\b', r'\bbluedart\b',
+        r'\bdhl\b', r'\bdetained\b', r'\bclearance duty\b', r'\bpolice seizure\b', r'\bcourier\b'
     ],
     "bill_disconnect": [
         r'\belectricity\b', r'\bpower (will be )?disconnected\b', r'\bbill was not updated\b',
@@ -32,6 +33,7 @@ SCAM_PATTERNS = {
     ],
     "digital_arrest": [
         r'\bdigital arrest\b', r'\barrest warrant\b', r'\bnarcotics\b',
+        r'\billegal narcotics\b', r'\bcontraband\b', r'\bpolice seizure\b',
         r'\bcbi\b', r'\bmumbai police\b', r'\bvideo interrogation\b'
     ],
     "lottery": [
@@ -44,8 +46,10 @@ SCAM_PATTERNS = {
 
 URGENCY_KEYWORDS = [
     r'\bimmediately\b', r'\burgent\b', r'\bwithin 24 hours\b', r'\btonight at\b',
-    r'\bexpires today\b', r'\bfinal demand\b', r'\bnon-bailable\b', r'\bpenalty\b'
+    r'\bexpires today\b', r'\bfinal demand\b', r'\bnon-bailable\b', r'\bpenalty\b',
+    r'\bpolice seizure\b', r'\bto avoid.*seizure\b', r'\bdetained\b'
 ]
+
 
 def score_rules(message: Dict[str, Any]) -> TriageResult:
     """Fast reflex scoring based on deterministic rules, heuristics, and mock intelligence.
@@ -80,7 +84,12 @@ def score_rules(message: Dict[str, Any]) -> TriageResult:
     # 3. Detect Scam Type
     detected_type = "none"
     max_type_hits = 0
+    # Bank safety advisory warning user NOT to share OTP
+    has_otp_safety_warning = bool(re.search(r'\b(do not|never|don\'?t)\s+(ever\s+)?share\s+(your\s+|the\s+)?otp\b', full_text_lower))
+
     for stype, patterns in SCAM_PATTERNS.items():
+        if stype == "otp_request" and has_otp_safety_warning:
+            continue
         hits = sum(1 for p in patterns if re.search(p, full_text_lower))
         if hits > max_type_hits:
             max_type_hits = hits
@@ -103,7 +112,10 @@ def score_rules(message: Dict[str, Any]) -> TriageResult:
         risk_score += 30
 
     # URL & Domain indicators
+    SHORTENER_DOMAINS = {"t.ly", "bit.ly", "tinyurl.com", "is.gd", "cutt.ly", "shorturl.at", "rb.gy", "rebrand.ly"}
     for d in all_domains:
+        if d in SHORTENER_DOMAINS:
+            risk_score += 35
         lookalike = check_lookalike(d)
         if lookalike.get("is_lookalike", False):
             risk_score += 40
@@ -139,6 +151,50 @@ def score_rules(message: Dict[str, Any]) -> TriageResult:
     if urgency >= 6:
         risk_score += 15
 
+    # Specific High-Impact Scam Pattern Boosters:
+    # 1. Contraband / Narcotics courier extortion detection
+    contraband_match = bool(re.search(r'\b(illegal narcotics|narcotics|mdma|drugs|contraband)\b', full_text_lower))
+    seizure_match = bool(re.search(r'\b(police seizure|mumbai customs|customs|detained|warrant|mumbai police|cbi)\b', full_text_lower))
+    extortion_payment_match = bool(re.search(r'\b(pay\s*(rs\.?|inr|\$|\d+)|clearance duty|avoid.*(seizure|arrest)|release fee)\b', full_text_lower))
+    if contraband_match and (seizure_match or extortion_payment_match):
+        risk_score += 45
+        if extortion_payment_match:
+            risk_score += 25
+        urgency = max(urgency, 8)
+        if detected_type in ("none", "other"):
+            detected_type = "courier"
+
+    # 2. Utility disconnection extortion (Electricity cut-off scam)
+    utility_cutoff_match = bool(
+        re.search(r'\b(electricity|power|mseb|bescom)\b', full_text_lower) and
+        re.search(r'\b(disconnected|disconnect|previous month bill|power cut)\b', full_text_lower)
+    )
+    if utility_cutoff_match:
+        risk_score += 45
+        urgency = max(urgency, 8)
+        if detected_type in ("none", "other"):
+            detected_type = "bill_disconnect"
+
+    # 3. Task Fraud / Fake Job Scam (YouTube like & earn / Telegram recruiter)
+    job_scam_match = bool(
+        re.search(r'\b(earn \d+|daily from home|liking youtube|rating products|daily by liking)\b', full_text_lower) and
+        re.search(r'\b(telegram|no investment|@telegram|start now)\b', full_text_lower)
+    )
+    if job_scam_match:
+        risk_score += 45
+        urgency = max(urgency, 7)
+        if detected_type in ("none", "other"):
+            detected_type = "job_offer"
+
+    # 4. Law Enforcement Impersonation & Digital Arrest
+    le_match = bool(re.search(r'\b(cbi|cyber crime|mumbai police|ed|nia|interpol)\b', full_text_lower))
+    digital_arrest_match = bool(re.search(r'\b(digital arrest|skype|video interrogation|video verification|arrest warrant)\b', full_text_lower))
+    if digital_arrest_match or (le_match and re.search(r'\b(warrant|intercepted|narcotics|passports)\b', full_text_lower)):
+        risk_score += 55
+        urgency = max(urgency, 9)
+        if detected_type in ("none", "other"):
+            detected_type = "digital_arrest"
+
     # Prompt Injection Detector (Layer 1 Input Guardrail)
     has_inj, _ = detect_injection(full_text)
     if has_inj:
@@ -147,13 +203,19 @@ def score_rules(message: Dict[str, Any]) -> TriageResult:
 
     # Mitigating factors for legitimate messages
     if auth_check.get("auth_passed", False):
-        # Officially authenticated sender
         if not all_domains or all(check_lookalike(d).get("is_official", False) for d in all_domains):
             risk_score = max(0, risk_score - 60)
 
-    # If sender is verified and 0 reports
     if "verified" in sender_rep.get("tag", "") and sender_rep.get("reports", 0) == 0:
         risk_score = max(0, risk_score - 40)
+
+    # Legitimate transactional OTP/banking message safeguard
+    if not all_urls and not attachments:
+        if has_otp_safety_warning or "verified" in sender_rep.get("tag", ""):
+            if not digital_arrest_match and not le_match and not contraband_match and not utility_cutoff_match and not job_scam_match:
+                risk_score = 0
+                detected_type = "none"
+
 
     # Normalize probability
     prob = min(1.0, max(0.0, risk_score / 100.0))
@@ -168,7 +230,9 @@ def score_rules(message: Dict[str, Any]) -> TriageResult:
         urgency=urgency,
         impersonates_brand=brand_impersonation,
         source="rules",
-        latency_ms=latency_ms
+        latency_ms=latency_ms,
+        status="escalated" if prob >= 0.2 else "passed",
+        reason=f"Detected {detected_type.replace('_', ' ')} indicators" if detected_type != "none" else "Rules detected no immediate threats"
     )
 
 def rules_only_verdict(message: Dict[str, Any]) -> Verdict:
@@ -203,6 +267,19 @@ def rules_only_verdict(message: Dict[str, Any]) -> Verdict:
                     finding=f"Domain registered only {age.get('age_days')} days ago with {age.get('reports')} fraud reports",
                     weight=0.85
                 ))
+            bl = check_blocklist(d)
+            if bl.get("is_blocked"):
+                evidence.append(Evidence(
+                    source_tool="check_blocklist",
+                    finding=f"Domain '{d}' matches known threat blocklist",
+                    weight=0.95
+                ))
+            if d in {"t.ly", "bit.ly", "tinyurl.com", "is.gd", "cutt.ly", "shorturl.at", "rb.gy", "rebrand.ly"}:
+                evidence.append(Evidence(
+                    source_tool="check_url",
+                    finding=f"Masked destination link via URL shortener '{d}' to evade security filters",
+                    weight=0.85
+                ))
 
     # Sender evidence
     s_rep = get_sender_reputation(sender)
@@ -212,6 +289,14 @@ def rules_only_verdict(message: Dict[str, Any]) -> Verdict:
             finding=f"Sender flagged with {s_rep.get('reports')} community reports ({s_rep.get('tag')})",
             weight=0.8
         ))
+    if sender:
+        bl_s = check_blocklist(sender)
+        if bl_s.get("is_blocked"):
+            evidence.append(Evidence(
+                source_tool="check_blocklist",
+                finding=f"Sender '{sender}' listed on active threat blocklist",
+                weight=0.95
+            ))
 
     # Auth evidence
     auth = check_email_auth(headers)
@@ -243,6 +328,64 @@ def rules_only_verdict(message: Dict[str, Any]) -> Verdict:
             weight=0.99
         ))
         risk_score = max(risk_score, 85)
+
+    # Contraband / Narcotics extortion evidence
+    contraband_m = bool(re.search(r'\b(illegal narcotics|narcotics|mdma|drugs|contraband)\b', full_msg_text.lower()))
+    seizure_m = bool(re.search(r'\b(police seizure|mumbai customs|customs|detained|warrant|mumbai police|cbi)\b', full_msg_text.lower()))
+    extortion_m = bool(re.search(r'\b(pay\s*(rs\.?|inr|\$|\d+)|clearance duty|avoid.*(seizure|arrest)|release fee)\b', full_msg_text.lower()))
+    if contraband_m and (seizure_m or extortion_m):
+        evidence.append(Evidence(
+            source_tool="threat_intelligence",
+            finding="Severe contraband courier extortion: narcotics allegation paired with urgent payment demand",
+            weight=0.95
+        ))
+        risk_score = max(risk_score, 85)
+
+    # Utility cut-off extortion evidence
+    utility_cutoff_m = bool(
+        re.search(r'\b(electricity|power|mseb|bescom)\b', full_msg_text.lower()) and
+        re.search(r'\b(disconnected|disconnect|previous month bill|power cut)\b', full_msg_text.lower())
+    )
+    if utility_cutoff_m:
+        evidence.append(Evidence(
+            source_tool="threat_intelligence",
+            finding="Fake utility disconnection notice with artificial urgency and unauthorized payment link",
+            weight=0.92
+        ))
+        risk_score = max(risk_score, 85)
+
+    # Task fraud / Fake job evidence
+    job_scam_m = bool(
+        re.search(r'\b(earn \d+|daily from home|liking youtube|rating products|daily by liking)\b', full_msg_text.lower()) and
+        re.search(r'\b(telegram|no investment|@telegram|start now)\b', full_msg_text.lower())
+    )
+    if job_scam_m:
+        evidence.append(Evidence(
+            source_tool="threat_intelligence",
+            finding="High-yield part-time task scam: fraudulent earnings promise with unverified Telegram recruitment",
+            weight=0.92
+        ))
+        risk_score = max(risk_score, 85)
+
+    # Law enforcement impersonation & digital arrest evidence
+    le_m = bool(re.search(r'\b(cbi|cyber crime|mumbai police|ed|nia|interpol)\b', full_msg_text.lower()))
+    digital_arrest_m = bool(re.search(r'\b(digital arrest|skype|video interrogation|video verification|arrest warrant)\b', full_msg_text.lower()))
+    if digital_arrest_m or (le_m and re.search(r'\b(warrant|intercepted|narcotics|passports)\b', full_msg_text.lower())):
+        evidence.append(Evidence(
+            source_tool="threat_intelligence",
+            finding="Law enforcement impersonation (CBI / Cyber Crime) with coercive digital arrest interrogation demand",
+            weight=0.98
+        ))
+        risk_score = max(risk_score, 90)
+
+    # Safe legitimate transactional OTP message guard
+    has_otp_warning = bool(re.search(r'\b(do not|never|don\'?t)\s+(ever\s+)?share\s+(your\s+|the\s+)?otp\b', full_msg_text.lower()))
+    if not urls and not attachments and (has_otp_warning or "verified" in s_rep.get("tag", "")):
+        if not digital_arrest_m and not le_m and not contraband_m and not utility_cutoff_m and not job_scam_m:
+            risk_score = 0
+            evidence = []
+
+
 
     # Label assignment
     if risk_score >= 75:

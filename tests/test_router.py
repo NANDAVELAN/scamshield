@@ -18,7 +18,6 @@ def test_router_fallback_to_rules(clean_cache):
         # Simulate outage on all cloud providers
         test_router.simulate_outage.add("gemini-pro")
         test_router.simulate_outage.add("gemini-flash")
-        test_router.simulate_outage.add("openrouter")
         test_router.simulate_outage.add("ollama")
 
         msg = {
@@ -88,3 +87,37 @@ def test_circuit_breaker_cooldown(clean_cache):
     status = test_router.get_status()
     assert not status["providers"]["gemini-pro"]["healthy"]
     assert status["providers"]["gemini-pro"]["error_count"] == 1
+
+def test_router_successful_llm_execution(clean_cache):
+    """When a primary LLM succeeds, router returns that provider and stores it in cache."""
+    from unittest.mock import patch
+
+    async def _test():
+        test_router = Router()
+        mock_verdict = Verdict(
+            risk_score=92,
+            label="scam",
+            scam_type="fake_kyc",
+            evidence=[],
+            explanation_en="LLM detected credential harvest attempt",
+            explanation_local="LLM detected credential harvest attempt",
+            recommended_action="quarantine"
+        )
+
+        with patch("llm.router.run_pipeline", return_value=mock_verdict):
+            msg = {
+                "channel": "sms",
+                "sender": "SBI-ALERT",
+                "subject": "",
+                "body": "Update PAN at scam link",
+                "urls": ["http://fake.com"],
+                "attachments": [],
+                "headers": {}
+            }
+            provider, verdict, hit = await analyze_with_router(test_router, msg)
+            assert provider == "gemini-pro"
+            assert verdict.risk_score == 92
+            assert verdict.label == "scam"
+            assert not hit
+
+    asyncio.run(_test())

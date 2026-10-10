@@ -7,7 +7,7 @@ from typing import Dict, Any, Tuple, Optional, Callable, AsyncGenerator
 from .providers import CHAIN
 from scamshield_agent.agent import build_root_agent
 from scamshield_agent.schemas import Verdict
-from triage.rules import rules_only_verdict
+import triage.rules
 from server.cache import verdict_cache
 from guardrails.input_guard import prepare_guarded_input
 from guardrails.output_guard import validate_verdict
@@ -78,15 +78,20 @@ class Router:
 
 router = Router()
 
-async def run_pipeline(agent, message: Dict[str, Any], event_callback: Optional[Callable] = None) -> Verdict:
+async def run_pipeline(agent, message: Dict[str, Any], event_callback: Optional[Callable] = None, provider: Optional[Dict[str, Any]] = None) -> Verdict:
     """Execute the Google ADK root agent with guarded input."""
     # Guard input
     guarded = prepare_guarded_input(message.get("body", ""))
 
-    # If Google API key is missing or not configured, raise to trigger fallback
-    api_key = os.getenv("GOOGLE_API_KEY", "")
-    if not api_key or api_key == "your_gemini_api_key_here":
-        raise ConnectionError("GOOGLE_API_KEY not configured or set to placeholder")
+    p_name = provider.get("name", "gemini-pro") if provider else "gemini-pro"
+    if p_name in ("gemini-pro", "gemini-flash"):
+        api_key = os.getenv("GOOGLE_API_KEY", "")
+        if not api_key or api_key == "your_gemini_api_key_here":
+            raise ConnectionError(f"GOOGLE_API_KEY not configured or set to placeholder for provider {p_name}")
+    elif p_name == "ollama":
+        ollama_url = os.getenv("OLLAMA_API_BASE", "http://localhost:11434")
+        if not ollama_url:
+            raise ConnectionError("OLLAMA_API_BASE not configured")
 
     # When live key is available, run ADK Runner
     from google.adk.runners import InMemoryRunner
@@ -123,11 +128,27 @@ async def run_pipeline(agent, message: Dict[str, Any], event_callback: Optional[
                 if hasattr(action, "tool_name") and action.tool_name:
                     executed_tools.add(action.tool_name)
 
+    # Retrieve structured verdict from ADK runner session state if generated
+    if not final_verdict:
+        try:
+            session = await runner._get_or_create_session(user_id=user_id, session_id=session_id)
+            if session and hasattr(session, "state") and "verdict" in session.state:
+                raw_v = session.state["verdict"]
+                if isinstance(raw_v, Verdict):
+                    final_verdict = raw_v
+                elif isinstance(raw_v, dict):
+                    final_verdict = Verdict.model_validate(raw_v)
+                elif isinstance(raw_v, str):
+                    final_verdict = Verdict.model_validate_json(raw_v)
+        except Exception as e:
+            logger.debug(f"Could not extract ADK session state verdict: {e}")
+
     # In case ADK returned without structured verdict, fallback safely
     if not final_verdict:
-        final_verdict = rules_only_verdict(message)
+        final_verdict = triage.rules.rules_only_verdict(message)
 
     return validate_verdict(final_verdict, executed_tools)
+
 
 async def analyze_with_router(
     router_instance: Router,
@@ -154,7 +175,7 @@ async def analyze_with_router(
                 agent = build_root_agent(p["fast"], p["strong"])
                 # 45 second timeout per README
                 verdict = await asyncio.wait_for(
-                    run_pipeline(agent, message, event_callback),
+                    run_pipeline(agent, message, event_callback, provider=p),
                     timeout=45.0
                 )
                 router_instance.mark_success(provider_name)
@@ -169,7 +190,7 @@ async def analyze_with_router(
                 continue
 
         # 4. Fail-safe rules-only fallback (never fails)
-        rules_verdict = rules_only_verdict(message)
+        rules_verdict = triage.rules.rules_only_verdict(message)
         verdict_cache.set(message, {
             "verdict": rules_verdict.model_dump(),
             "provider_used": "rules"

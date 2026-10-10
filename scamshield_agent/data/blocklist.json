@@ -9,7 +9,9 @@
     "mumbaipolice-arrest-notice.me",
     "netflix-payment-failed.vip",
     "free-recharge-offer.cc",
-    "lottery-winner-claim.biz"
+    "lottery-winner-claim.biz",
+    "fedx-customs-pay.in",
+    "sbi-kyc-update.com"
   ],
   "senders": [
     "+91-90000-12345",
@@ -17,9 +19,12 @@
     "+91-99887-76655",
     "+91-91234-56789",
     "alerts@sbi-kyc-update.in",
-    "support@hdfc-netbanking-verify.xyz"
+    "support@hdfc-netbanking-verify.xyz",
+    "FEDEX-INDIA",
+    "CBI-HQ-OFFICER"
   ],
   "suspicious_keywords": [
+
     "kyc expired",
     "electricity will be disconnected",
     "digital arrest",
@@ -28,6 +33,9 @@
     "lottery winner",
     "part time job daily 5000",
     "account suspended immediately",
-    "click link to verify"
+    "click link to verify",
+    "illegal narcotics",
+    "police seizure"
   ]
 }
+

@@ -3,6 +3,12 @@ venv/
 __pycache__/
 *.pyc
 .env
+backend/.env
+node_modules/
 .pytest_cache/
 .coverage
 htmlcov/
+setup-agent-env.sh
+.agent/
+.gradle/
+build/

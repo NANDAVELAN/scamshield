@@ -11,45 +11,92 @@ from triage.rules import score_rules
 
 logger = logging.getLogger("scamshield.triage")
 
-# Jev System One questions per README section 9
-JEV_QUESTIONS = [
-    {"id": "is_scam", "question": "Is this message a scam?", "type": "probability"},
-    {"id": "scam_type", "question": "Which scam type?", "type": "choice",
-     "options": ["fake_kyc", "upi_refund", "courier", "bill_disconnect", "job_offer", "digital_arrest", "lottery", "otp_request", "other", "none"]},
-    {"id": "urgency", "question": "How urgent/threatening is the language?", "type": "ordinal_0_10"},
-    {"id": "impersonates_brand", "question": "Does it impersonate a known brand or authority?", "type": "probability"}
-]
+# TypeSafe System One questions per official @typesafe-ai/sdk spec
+TYPESAFE_QUESTIONS = {
+    "is_scam": {"type": "noul", "instructions": "Is this message a scam, phishing attempt, or fraudulent lure?"},
+    "scam_type": {
+        "type": "choice",
+        "instructions": "Which scam category best matches this message?",
+        "criteria": {
+            "fake_kyc": None,
+            "upi_refund": None,
+            "courier": None,
+            "bill_disconnect": None,
+            "job_offer": None,
+            "digital_arrest": None,
+            "lottery": None,
+            "otp_request": None,
+            "illegal_narcotics": None,
+            "other": None,
+            "none": None
+        }
+    },
+    "urgency": {
+        "type": "score",
+        "instructions": "Rate the level of urgency or coercive pressure from 0 to 10",
+        "criteria": [None] * 11
+    },
+    "impersonates_brand": {"type": "noul", "instructions": "Does the message impersonate a known bank, government body, or recognized brand?"}
+}
 
 async def _call_jev(message: Dict[str, Any]) -> TriageResult:
-    """Attempt TypeSafe AI Jev System One decision model."""
-    jev_key = os.getenv("JEV_API_KEY", "")
-    jev_url = os.getenv("JEV_BASE_URL", "")
+    """Attempt TypeSafe AI Jev System One decision model using official @typesafe-ai/sdk API spec."""
+    api_key = (os.getenv("TYPESAFE_API_KEY") or os.getenv("JEV_API_KEY") or "").strip()
+    base_url = (os.getenv("TYPESAFE_BASE_URL") or os.getenv("JEV_BASE_URL") or "https://api.typesafe.ai").rstrip("/")
 
-    if not jev_key or not jev_url or jev_key == "your_jev_api_key_here":
-        raise ConnectionError("Jev API key or base URL not configured")
+    if not api_key or api_key in ("your_typesafe_api_key_here", "your_jev_api_key_here"):
+        raise ConnectionError("TypeSafe API key not configured or set to placeholder")
 
     t0 = time.perf_counter()
+    endpoint = f"{base_url}/v1/systemone" if not base_url.endswith("/v1") else f"{base_url}/systemone"
+    
+    text_content = f"Channel: {message.get('channel', 'notification')} | Sender: {message.get('sender', '')} | Subject: {message.get('subject', '')} | Body: {message.get('body', '')}"
+
+    payload = {
+        "state": text_content,
+        "questions": TYPESAFE_QUESTIONS,
+        "model": os.getenv("TYPESAFE_MODEL", "jev-latest")
+    }
+
     async with httpx.AsyncClient(timeout=3.0) as client:
         resp = await client.post(
-            f"{jev_url.rstrip('/')}/triage",
-            headers={"Authorization": f"Bearer {jev_key}", "Content-Type": "application/json"},
-            json={
-                "text": f"{message.get('subject', '')} {message.get('body', '')}",
-                "questions": JEV_QUESTIONS
-            }
+            endpoint,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "User-Agent": "typesafe-sdk/0.6.0"
+            },
+            json=payload
         )
         if resp.status_code != 200:
-            raise RuntimeError(f"Jev API returned HTTP {resp.status_code}")
+            raise RuntimeError(f"TypeSafe API returned HTTP {resp.status_code}: {resp.text[:120]}")
         data = resp.json()
 
     latency_ms = max(1, int((time.perf_counter() - t0) * 1000))
+    answers = data.get("answers", {})
+
+    # Extract typed answers from TypeSafe System One format
+    is_scam_data = answers.get("is_scam", {})
+    prob = float(is_scam_data.get("noul", data.get("is_scam_probability", 0.5)))
+
+    scam_type_data = answers.get("scam_type", {})
+    scam_type = scam_type_data.get("choice", data.get("scam_type", "other"))
+
+    urgency_data = answers.get("urgency", {})
+    urgency = int(urgency_data.get("score", data.get("urgency_score", 5)))
+
+    brand_data = answers.get("impersonates_brand", {})
+    impersonates_brand = float(brand_data.get("noul", data.get("impersonates_brand_probability", 0.0)))
+
     return TriageResult(
-        scam_probability=data.get("is_scam_probability", 0.5),
-        scam_type=data.get("scam_type", "other"),
-        urgency=int(data.get("urgency_score", 5)),
-        impersonates_brand=data.get("impersonates_brand_probability", 0.0),
+        scam_probability=prob,
+        scam_type=scam_type,
+        urgency=urgency,
+        impersonates_brand=impersonates_brand,
         source="jev",
-        latency_ms=latency_ms
+        latency_ms=latency_ms,
+        status="escalated" if prob >= 0.2 else "passed",
+        reason=f"TypeSafe Jev classified as {scam_type} (p={prob:.2f})"
     )
 
 async def _call_gemini_flash_json(message: Dict[str, Any]) -> TriageResult:
@@ -61,6 +108,13 @@ async def _call_gemini_flash_json(message: Dict[str, Any]) -> TriageResult:
     t0 = time.perf_counter()
     from google import genai
     from google.genai import types
+    from pydantic import BaseModel, Field
+
+    class GeminiTriageResponse(BaseModel):
+        scam_probability: float = Field(ge=0.0, le=1.0)
+        scam_type: str
+        urgency: int = Field(ge=0, le=10)
+        impersonates_brand: float = Field(ge=0.0, le=1.0)
 
     client = genai.Client(api_key=api_key)
     prompt = (
@@ -80,21 +134,25 @@ async def _call_gemini_flash_json(message: Dict[str, Any]) -> TriageResult:
         contents=prompt,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
-            response_schema=TriageResult
+            response_schema=GeminiTriageResponse
         )
     )
 
     parsed = json.loads(response.text)
     latency_ms = max(1, int((time.perf_counter() - t0) * 1000))
 
+    prob = float(parsed.get("scam_probability", 0.5))
     return TriageResult(
-        scam_probability=parsed.get("scam_probability", 0.5),
+        scam_probability=prob,
         scam_type=parsed.get("scam_type", "none"),
         urgency=int(parsed.get("urgency", 0)),
-        impersonates_brand=parsed.get("impersonates_brand", 0.0),
+        impersonates_brand=float(parsed.get("impersonates_brand", 0.0)),
         source="gemini_flash",
-        latency_ms=latency_ms
+        latency_ms=latency_ms,
+        status="escalated" if prob >= 0.2 else "passed",
+        reason=f"Gemini Flash detected {parsed.get('scam_type', 'none')}"
     )
+
 
 async def _call_rules(message: Dict[str, Any]) -> TriageResult:
     """Fallback Tier 3: Deterministic regex and mock-reputation rules."""

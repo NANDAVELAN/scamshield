@@ -94,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updatePhoneHeader(sender, channel) {
     dispSender.textContent = sender;
-    dispChannel.textContent = channel.toUpperCase() + " Message";
+    dispChannel.textContent = String(channel || "sms").toUpperCase() + " Message";
     channelIcon.textContent = channel === "whatsapp" ? "🟢" : (channel === "sms" ? "💬" : "✉️");
   }
 
@@ -167,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
     bubble.innerHTML = `
       <div>${escapeHtml(body)}</div>
       <div class="bubble-meta">
-        <span>${channel.toUpperCase()} · Inbound</span>
+        <span>${String(channel || "sms").toUpperCase()} · Inbound</span>
         <span class="threat-tag" id="bubble-threat-tag">Scanning...</span>
       </div>
     `;
@@ -224,27 +224,51 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function animatePipelineExecution(result, reflexMs, bubble) {
-    const verdict = result.verdict;
-    const triage = result.triage;
-    const isThreat = verdict.risk_score >= 60;
-    const isSuspicious = verdict.risk_score >= 35 && verdict.risk_score < 60;
+    const verdict = result.verdict || {};
+    const triage = result.triage || {};
+    const score = verdict.risk_score !== undefined ? verdict.risk_score : 0;
+    const isThreat = score >= 60;
+    const isSuspicious = score >= 30 && score < 60;
+
+    // Safely calculate reflex decision, score, and explanation
+    const reflexScore = (triage.risk_score !== undefined)
+      ? triage.risk_score
+      : (triage.scam_probability !== undefined ? Math.round(triage.scam_probability * 100) : score);
+
+    const reflexStatus = String(triage.status || (reflexScore >= 20 ? "ESCALATED" : "PASSED")).toUpperCase();
+
+    const reflexReason = triage.reason
+      ? triage.reason
+      : (triage.scam_type && triage.scam_type !== "none"
+          ? `Detected potential ${String(triage.scam_type).replace(/_/g, " ")}. Escalated for multi-agent verification.`
+          : (reflexScore >= 20 ? "Escalated for deep multi-agent verification." : "Reflex evaluation detected no immediate threats."));
 
     // Reflex display
-    reflexBadge.textContent = triage ? triage.status.toUpperCase() : "DONE";
+    reflexBadge.textContent = reflexStatus;
     reflexBadge.style.background = isThreat ? "var(--rose)" : (isSuspicious ? "var(--amber)" : "var(--emerald)");
     reflexBadge.style.color = "white";
 
     reflexDisplay.innerHTML = `
       <div style="width: 100%;">
         <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
-          <strong>Reflex Decision: ${triage ? triage.status.toUpperCase() : "ESCALATED"}</strong>
-          <span style="color: var(--cyan); font-family: monospace;">Risk: ${triage ? triage.risk_score : verdict.risk_score}/100</span>
+          <strong>Reflex Decision: ${escapeHtml(reflexStatus)}</strong>
+          <span style="color: var(--cyan); font-family: monospace;">Risk: ${reflexScore}/100</span>
         </div>
-        <div style="font-size: 12px; color: #cbd5e1;">${triage ? triage.reason : "Escalated for deep multi-agent verification."}</div>
+        <div style="font-size: 12px; color: #cbd5e1;">${escapeHtml(reflexReason)}</div>
       </div>
     `;
 
-    appendLog(`Reflex gate returned in ${reflexMs}ms with score ${triage ? triage.risk_score : verdict.risk_score}`, "agent");
+    appendLog(`Reflex gate returned in ${reflexMs}ms with score ${reflexScore}`, "agent");
+
+    // Fast-path for benign/safe messages bypassed by reflex gate
+    if (!isThreat && !isSuspicious) {
+      setTimeout(() => {
+        setNodeState("triage", "done", "Passed");
+        setNodeState("verdict", "done", "Safe");
+        renderFinalVerdict(result, bubble);
+      }, 300);
+      return;
+    }
 
     // Agent simulation step animation
     setTimeout(() => {
@@ -268,7 +292,7 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => {
       setNodeState("attach", "done", "Checked");
       setNodeState("verdict", "active", "Synthesizing");
-      appendLog(`Synthesizing grounded verdict using ${result.provider_used}...`, "agent");
+      appendLog(`Synthesizing grounded verdict using ${result.provider_used || "rules"}...`, "agent");
     }, 750);
 
     setTimeout(() => {
@@ -278,41 +302,51 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderFinalVerdict(result, bubble) {
-    const verdict = result.verdict;
-    const score = verdict.risk_score;
+    const verdict = result.verdict || {};
+    const score = verdict.risk_score !== undefined ? verdict.risk_score : 0;
+    const label = String(verdict.label || "unknown").toUpperCase();
     const isThreat = score >= 60;
-    const isSuspicious = score >= 35 && score < 60;
+    const isSuspicious = score >= 30 && score < 60;
 
-    pipelineProvider.textContent = result.provider_used;
+    pipelineProvider.textContent = result.provider_used || "rules";
 
     // Update phone bubble
-    if (isThreat) {
-      bubble.classList.add("bubble-flagged");
-      bubble.querySelector("#bubble-threat-tag").textContent = "🚨 SCAM INTERCEPTED";
-      bubble.querySelector("#bubble-threat-tag").style.color = "var(--rose)";
-    } else if (isSuspicious) {
-      bubble.classList.add("bubble-flagged");
-      bubble.querySelector("#bubble-threat-tag").textContent = "⚠️ SUSPICIOUS";
-      bubble.querySelector("#bubble-threat-tag").style.color = "var(--amber)";
-    } else {
-      bubble.classList.add("bubble-safe");
-      bubble.querySelector("#bubble-threat-tag").textContent = "✅ VERIFIED SAFE";
-      bubble.querySelector("#bubble-threat-tag").style.color = "var(--emerald)";
+    if (bubble) {
+      const threatTag = bubble.querySelector("#bubble-threat-tag");
+      if (isThreat) {
+        bubble.classList.add("bubble-flagged");
+        if (threatTag) {
+          threatTag.textContent = "🚨 SCAM INTERCEPTED";
+          threatTag.style.color = "var(--rose)";
+        }
+      } else if (isSuspicious) {
+        bubble.classList.add("bubble-flagged");
+        if (threatTag) {
+          threatTag.textContent = "⚠️ SUSPICIOUS";
+          threatTag.style.color = "var(--amber)";
+        }
+      } else {
+        bubble.classList.add("bubble-safe");
+        if (threatTag) {
+          threatTag.textContent = "✅ VERIFIED SAFE";
+          threatTag.style.color = "var(--emerald)";
+        }
+      }
     }
 
     // Verdict Badge
-    verdictBadge.textContent = `RISK: ${score}/100 [${verdict.label.toUpperCase()}]`;
+    verdictBadge.textContent = `RISK: ${score}/100 [${label}]`;
     verdictBadge.className = `risk-badge ${isThreat ? "badge-scam" : (isSuspicious ? "badge-suspicious" : "badge-safe")}`;
 
     // Evidence pills
     let evidenceHtml = "";
-    if (verdict.evidence && verdict.evidence.length > 0) {
+    if (verdict.evidence && Array.isArray(verdict.evidence) && verdict.evidence.length > 0) {
       evidenceHtml = `
         <div class="evidence-grid">
           ${verdict.evidence.map(e => `
             <div class="evidence-pill">
-              <div class="evidence-source">🔍 ${escapeHtml(e.source_tool)}</div>
-              <div>${escapeHtml(e.finding)}</div>
+              <div class="evidence-source">🔍 ${escapeHtml(e?.source_tool || "investigator")}</div>
+              <div>${escapeHtml(e?.finding || "")}</div>
             </div>
           `).join("")}
         </div>
@@ -320,7 +354,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     verdictBody.innerHTML = `
-      <div class="verdict-explanation">${escapeHtml(verdict.explanation_en)}</div>
+      <div class="verdict-explanation">${escapeHtml(verdict.explanation_en || "No explanation provided.")}</div>
       ${verdict.defanged_content ? `
         <div style="background: rgba(15,23,42,0.8); border: 1px dashed var(--panel-border); padding: 8px 10px; border-radius: 6px; font-size: 11px; margin-bottom: 12px; font-family: monospace;">
           <div style="color: var(--cyan); margin-bottom: 2px;">🛡️ Defanged / Redacted Content:</div>
@@ -331,9 +365,10 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
 
     // Action Proposal
-    if (verdict.recommended_action && verdict.recommended_action !== "allow") {
+    const recAction = String(verdict.recommended_action || "none");
+    if (recAction && recAction !== "allow" && recAction !== "none") {
       actionFooter.style.display = "block";
-      actionProposalDesc.textContent = `Proposed Action: ${verdict.recommended_action.toUpperCase()} — Reversible, 0 destructive side-effects.`;
+      actionProposalDesc.textContent = `Proposed Action: ${recAction.toUpperCase()} — Reversible, 0 destructive side-effects.`;
       btnApproveAction.style.display = "inline-flex";
       btnRejectAction.style.display = "inline-flex";
       btnUndoAction.style.display = "none";
@@ -341,7 +376,7 @@ document.addEventListener("DOMContentLoaded", () => {
       actionFooter.style.display = "none";
     }
 
-    appendLog(`Verdict synthesis finalized: ${verdict.label} (${score}/100). Recommended: ${verdict.recommended_action}`, isThreat ? "threat" : "info");
+    appendLog(`Verdict synthesis finalized: ${label} (${score}/100). Recommended: ${recAction}`, isThreat ? "threat" : "info");
   }
 
   // ACTION BUTTON HANDLERS

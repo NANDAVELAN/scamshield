@@ -1,4 +1,5 @@
-"""FastAPI application for ScamShield backend, analysis pipeline, and SSE streaming."""
+"""FastAPI application for ScamShield cognitive defense backend and SSE streaming."""
+# Reload trigger 2
 import asyncio
 import json
 import os
@@ -22,12 +23,25 @@ from scamshield_agent.schemas import (
     TriageResult
 )
 from scamshield_agent.tools.campaign_tools import link_campaign
+import importlib
+import scamshield_agent.tools.url_tools
+import scamshield_agent.tools.sender_tools
+import triage.rules
+import triage.jev_client
+import llm.router
+importlib.reload(scamshield_agent.tools.url_tools)
+importlib.reload(scamshield_agent.tools.sender_tools)
+importlib.reload(triage.rules)
+importlib.reload(triage.jev_client)
+importlib.reload(llm.router)
+
 from triage.rules import score_rules
 from triage.jev_client import quick_triage
 from llm.router import router, analyze_with_router
 from .store import incident_store
 from .executor import executor
 from .control import router_control, CONTROL_STATE
+
 
 app = FastAPI(
     title="ScamShield API",
@@ -71,7 +85,7 @@ async def broadcast_sse_event(stage: str, agent: str, status: str, provider: str
             pass
 
 @app.get("/health")
-def health_check():
+async def health_check():
     """Health check endpoint."""
     return {
         "status": "ok",
@@ -219,12 +233,12 @@ async def analyze_message(req: AnalyzeRequest):
     )
 
 @app.get("/incidents", response_model=List[Incident])
-def list_incidents():
+async def list_incidents():
     """Retrieve all open and historical incidents."""
     return incident_store.list_all()
 
 @app.get("/incidents/{incident_id}", response_model=Incident)
-def get_incident(incident_id: str):
+async def get_incident(incident_id: str):
     """Retrieve details for a specific incident."""
     inc = incident_store.get(incident_id)
     if not inc:
@@ -232,7 +246,7 @@ def get_incident(incident_id: str):
     return inc
 
 @app.post("/incidents/{incident_id}/approve")
-def approve_incident(incident_id: str):
+async def approve_incident(incident_id: str):
     """Approve proposed defense action (quarantine or block) via safe executor."""
     res = executor.execute_incident_action(incident_id, approved=True, actor="human_operator")
     if res.get("status") == "error":
@@ -240,7 +254,7 @@ def approve_incident(incident_id: str):
     return res
 
 @app.post("/incidents/{incident_id}/reject")
-def reject_incident(incident_id: str):
+async def reject_incident(incident_id: str):
     """Reject proposed defense action."""
     res = executor.reject_incident_action(incident_id, actor="human_operator")
     if res.get("status") == "error":
@@ -248,7 +262,7 @@ def reject_incident(incident_id: str):
     return res
 
 @app.post("/incidents/{incident_id}/undo")
-def undo_incident_action(incident_id: str):
+async def undo_incident_action(incident_id: str):
     """Undo previously executed action (reversibility guarantee)."""
     res = executor.undo_action(incident_id)
     if res.get("status") == "error":
@@ -258,11 +272,11 @@ def undo_incident_action(incident_id: str):
 from fastapi.responses import RedirectResponse
 
 @app.get("/")
-def root_redirect():
+async def root_redirect():
     return RedirectResponse(url="/control/ui")
 
 @app.get("/control")
-def control_redirect():
+async def control_redirect():
     return RedirectResponse(url="/control/ui")
 
 # Static files for Control Center UI
