@@ -25,13 +25,12 @@ if not exist ".venv\Scripts\python.exe" (
 
 echo.
 echo Active URLs:
-echo   - Mission Control Center: http://127.0.0.1:8080/control/ui
 echo   - Attack Simulator:      http://127.0.0.1:8080/simulator
 echo   - OpenAPI Docs:          http://127.0.0.1:8080/docs
 echo.
 
 REM Automatically open default browser after short delay
-start "" http://127.0.0.1:8080/control/ui
+start "" http://127.0.0.1:8080/simulator
 
 echo [*] Launching Uvicorn server on http://127.0.0.1:8080...
 echo (Press Ctrl+C to stop)

@@ -70,36 +70,22 @@ def main():
     assert rej_res["status"] == "success"
     print(f"  [PASS] Rehearsal 2b: Incident {inc2_id} rejected by operator:", rej_res.get("details", rej_res.get("message")))
 
-    # Check audit ledger
-    audit = get("/control/audit")
-    assert any(log["incident_id"] == inc1_id and log["action"] == "quarantine" for log in audit["audit_log"])
-    assert any(log["incident_id"] == inc2_id and log["action"] == "reject" for log in audit["audit_log"])
-    print(f"  [PASS] Rehearsal 2c: Both actions recorded in audit log ({len(audit['audit_log'])} entries)")
+    # Check incident retrieval
+    inc1 = get(f"/incidents/{inc1_id}")
+    assert inc1["incident_id"] == inc1_id
+    print(f"  [PASS] Rehearsal 2c: Incident {inc1_id} status verified: {inc1['status']}")
 
-    # 3. Provider outage simulation -> falls back to rules/ollama and reports provider used
-    post("/control/provider", {"simulate_outage": ["gemini_flash", "gemini_pro", "ollama"]})
-    res3 = post("/analyze", scam1)
-    print("  [PASS] Rehearsal 3: Outage simulated. Fallback succeeded!")
-    print(f"      Provider Used: {res3['provider_used']} (Expected: rules or ollama)")
-    print(f"      Risk Score: {res3['verdict']['risk_score']}/100")
-    assert res3["provider_used"] in ("rules", "ollama")
-    post("/control/provider", {"simulate_outage": []}) # Reset
-
-    # 4. Harness invariants check via API
-    harness = get("/control/harness")
-    assert harness["all_invariants_passed"] is True
-    print("  [PASS] Rehearsal 4: All invariants I1-I8 verified PASS in live system")
-
-    # 5. UI Endpoints check
-    ui_req = urllib.request.Request(f"{BASE_URL}/control/ui/")
-    with urllib.request.urlopen(ui_req) as resp:
-        assert resp.status == 200
-        print("  [PASS] Rehearsal 5: Control Center served at /control/ui")
-
+    # 3. Message Simulator UI route check
     sim_req = urllib.request.Request(f"{BASE_URL}/simulator/")
     with urllib.request.urlopen(sim_req) as resp:
         assert resp.status == 200
-        print("  [PASS] Rehearsal 6: Attack & Defense Simulator served at /simulator")
+        print("  [PASS] Rehearsal 3: Attack & Defense Simulator served at /simulator")
+
+    # 4. Root redirect to /simulator check
+    root_req = urllib.request.Request(f"{BASE_URL}/", headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(root_req) as resp:
+        assert resp.status == 200
+        print("  [PASS] Rehearsal 4: Root redirect to /simulator verified")
 
     print("\n[SUCCESS] ALL DEFINITION OF DONE REHEARSAL CHECKS PASSED PERFECTLY!")
 

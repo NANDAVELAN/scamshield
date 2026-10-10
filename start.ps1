@@ -42,19 +42,17 @@ if ($ExistingProcess) {
 
 Write-Host ""
 Write-Host ">> Active Operator URLs:" -ForegroundColor Green
-Write-Host "   - Mission Control Center: " -NoNewline -ForegroundColor White
-Write-Host "http://127.0.0.1:8080/control/ui" -ForegroundColor Cyan
 Write-Host "   - Message Simulator:      " -NoNewline -ForegroundColor White
 Write-Host "http://127.0.0.1:8080/simulator" -ForegroundColor Cyan
 Write-Host "   - Swagger OpenAPI Docs:   " -NoNewline -ForegroundColor White
 Write-Host "http://127.0.0.1:8080/docs" -ForegroundColor Cyan
 Write-Host ""
-Write-Host "[+] Launching web browser to Control Center in 2 seconds..." -ForegroundColor DarkGray
+Write-Host "[+] Launching web browser to Message Simulator in 2 seconds..." -ForegroundColor DarkGray
 
 # Launch browser asynchronously in background after 2 seconds
 Start-Job -ScriptBlock {
     Start-Sleep -Seconds 2
-    Start-Process "http://127.0.0.1:8080/control/ui"
+    Start-Process "http://127.0.0.1:8080/simulator"
 } | Out-Null
 
 Write-Host "[*] Starting Uvicorn backend server on 127.0.0.1:8080 (Press Ctrl+C to stop)..." -ForegroundColor Green

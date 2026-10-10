@@ -134,15 +134,18 @@ HOST=0.0.0.0
 
 ---
 
-## 💻 How to Run Backend
+## 💻 How to Run Backend & Simulator
 
-### 1. Using Python Virtual Environment
+### 1. Quick Launch Scripts
 ```bash
-# Linux / macOS / WSL
-./backend/run.sh
+# Windows (Command Prompt)
+start.bat
 
-# Windows (Command Prompt / PowerShell)
-backend\run.bat
+# Windows (PowerShell)
+.\start.ps1
+
+# Linux / macOS / WSL
+./start.sh
 ```
 
 ### 2. Manual Launch
@@ -152,15 +155,16 @@ source .venv/bin/activate       # Linux/macOS
 .venv\Scripts\activate          # Windows
 
 # Install dependencies
-pip install -r backend/requirements.txt
+pip install -r requirements.txt
 
 # Start FastAPI server
-uvicorn backend.app:app --host 0.0.0.0 --port 8000 --reload
+uvicorn server.main:app --host 127.0.0.1 --port 8080 --reload
 ```
 
-- API Base: `http://127.0.0.1:8000`
-- Interactive Swagger Docs: `http://127.0.0.1:8000/docs`
-- Mobile Web Preview: `http://127.0.0.1:8000/`
+- **Attack & Defense Simulator:** `http://127.0.0.1:8080/simulator`
+- **Interactive Swagger Docs:** `http://127.0.0.1:8080/docs`
+- **Health Check:** `http://127.0.0.1:8080/health`
+- **Phone Application:** Open `app/www/index.html` in browser or run via Android Studio / Capacitor.
 
 ---
 

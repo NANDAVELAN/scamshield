@@ -1,6 +1,6 @@
 # ScamShield Agent Rules and Guidelines
 
-- Python 3.11 backend/agent; vanilla JS for the MV3 extension and Control Center.
+- Python 3.11 backend/agent; vanilla JS for the Android Phone Application and Simulator.
 - Agent framework: Google ADK. Root agent built by `build_root_agent(fast_model, strong_model)`.
 - SequentialAgent + ParallelAgent. An LlmAgent with `output_schema` must not have tools.
 - Tools: plain typed functions, full docstrings, return dicts with a `status` key.

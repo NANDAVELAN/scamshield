@@ -62,6 +62,11 @@ class AnalyzeResponse(BaseModel):
     cache_hit: bool = False
     status: Literal["pending_approval", "approved", "rejected", "auto_executed"] = "pending_approval"
     campaign_id: Optional[str] = None
+    # Convenience fields for mobile phone app / client front-ends
+    score: Optional[int] = None
+    action: Optional[str] = None
+    reason: Optional[str] = None
+    evidence: Optional[Any] = None
 
 class Incident(BaseModel):
     incident_id: str

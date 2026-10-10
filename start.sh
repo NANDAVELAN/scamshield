@@ -48,16 +48,15 @@ fi
 
 echo ""
 echo "Active URLs:"
-echo "   - Mission Control Center: http://127.0.0.1:8080/control/ui"
 echo "   - Message Simulator:      http://127.0.0.1:8080/simulator"
 echo "   - OpenAPI Docs:           http://127.0.0.1:8080/docs"
 echo ""
 
 # Try opening default browser
 if command -v xdg-open > /dev/null; then
-    (sleep 2 && xdg-open "http://127.0.0.1:8080/control/ui") &
+    (sleep 2 && xdg-open "http://127.0.0.1:8080/simulator") &
 elif command -v open > /dev/null; then
-    (sleep 2 && open "http://127.0.0.1:8080/control/ui") &
+    (sleep 2 && open "http://127.0.0.1:8080/simulator") &
 fi
 
 echo "[*] Starting Uvicorn on 127.0.0.1:8080..."

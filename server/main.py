@@ -40,8 +40,12 @@ from triage.jev_client import quick_triage
 from llm.router import router, analyze_with_router
 from .store import incident_store
 from .executor import executor
-from .control import router_control, CONTROL_STATE
 
+CONTROL_STATE = {
+    "flag_threshold": 0.80,
+    "ignore_threshold": 0.30,
+    "paused": False
+}
 
 app = FastAPI(
     title="ScamShield API",
@@ -60,9 +64,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Mount Control endpoints
-app.include_router(router_control)
 
 # SSE Event Broadcasting Channel
 sse_subscribers: List[asyncio.Queue] = []
@@ -222,6 +223,13 @@ async def analyze_message(req: AnalyzeRequest):
         "status": status
     })
 
+    evidence_dict = {
+        "reflex": f"Reflex gate ({triage_res.source}) probability {triage_res.scam_probability:.2f}",
+        "url": next((e.finding for e in verdict.evidence if "url" in e.source_tool or "domain" in e.source_tool), "No links found"),
+        "sender": next((e.finding for e in verdict.evidence if "sender" in e.source_tool or "email" in e.source_tool), req.sender),
+        "attachment": next((e.finding for e in verdict.evidence if "attachment" in e.source_tool), "No attachments")
+    }
+
     return AnalyzeResponse(
         incident_id=incident_id,
         triage=triage_res,
@@ -229,7 +237,11 @@ async def analyze_message(req: AnalyzeRequest):
         provider_used=provider_used,
         cache_hit=cache_hit,
         status=status,
-        campaign_id=campaign_id
+        campaign_id=campaign_id,
+        score=verdict.risk_score,
+        action=verdict.recommended_action,
+        reason=verdict.explanation_en,
+        evidence=evidence_dict
     )
 
 @app.get("/incidents", response_model=List[Incident])
@@ -273,16 +285,7 @@ from fastapi.responses import RedirectResponse
 
 @app.get("/")
 async def root_redirect():
-    return RedirectResponse(url="/control/ui")
-
-@app.get("/control")
-async def control_redirect():
-    return RedirectResponse(url="/control/ui")
-
-# Static files for Control Center UI
-control_ui_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "control_center")
-if os.path.exists(control_ui_dir):
-    app.mount("/control/ui", StaticFiles(directory=control_ui_dir, html=True), name="control_ui")
+    return RedirectResponse(url="/simulator")
 
 # Static files for Simulator
 simulator_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "simulator")

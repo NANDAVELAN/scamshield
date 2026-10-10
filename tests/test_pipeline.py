@@ -88,42 +88,11 @@ def test_analyze_legitimate_message():
     assert data["verdict"]["risk_score"] <= 35
     assert data["verdict"]["recommended_action"] == "none"
 
-def test_control_endpoints():
-    """Verify Control Center status, provider override, and autonomy settings."""
-    # State check
-    st_resp = client.get("/control/state")
-    assert st_resp.status_code == 200
-    state = st_resp.json()
-    assert "providers" in state
-    assert "thresholds" in state
-
-    # Provider override
-    prov_resp = client.post("/control/provider", json={"force": "ollama", "simulate_outage": ["gemini-pro"]})
-    assert prov_resp.status_code == 200
-
-    # Reset provider override
-    client.post("/control/provider", json={"force": "", "simulate_outage": []})
-
-    # Mode update
-    mode_resp = client.post("/control/mode", json={"autonomy": "auto_low_risk", "privacy": False})
-    assert mode_resp.status_code == 200
-    assert mode_resp.json()["mode"]["autonomy"] == "auto_low_risk"
-
-    # Reset mode
-    client.post("/control/mode", json={"autonomy": "ask", "privacy": False})
-
-def test_control_harness_and_static_ui():
-    """Verify Control Center harness endpoint and static UI routes."""
-    h_resp = client.get("/control/harness")
-    assert h_resp.status_code == 200
-    h_data = h_resp.json()
-    assert h_data["all_invariants_passed"] is True
-    assert len(h_data["invariants"]) == 8
-
-    # Static UI route checks
-    ui_resp = client.get("/control/ui/")
-    assert ui_resp.status_code == 200
-    assert "ScamShield" in ui_resp.text
+def test_simulator_static_ui_and_redirect():
+    """Verify Simulator static route and root redirect."""
+    root_resp = client.get("/", follow_redirects=False)
+    assert root_resp.status_code in (302, 307)
+    assert root_resp.headers["location"] == "/simulator"
 
     sim_resp = client.get("/simulator/")
     assert sim_resp.status_code == 200
