@@ -99,7 +99,7 @@ const SAMPLES=[
 {ch:'mail',from:'Amazon <orders@amaz0n-deals.com>',body:'Your refund invoice is attached. Open to receive payment. (Invoice.pdf.exe)',r:0.83,u:'amaz0n-deals.com uses a zero for "o"',s:'Display name spoof, domain mismatch',a:'Double extension .pdf.exe is an executable',v:'bad',sc:94,act:'block',why:'Spoofed brand and a disguised executable attachment.'}
 ];
 
-const savedApi = localStorage.getItem('scamshield_api') || 'http://10.0.2.2:8000';
+const savedApi = localStorage.getItem('scamshield_api') || 'http://10.0.2.2:8080';
 const savedDemo = localStorage.getItem('scamshield_demo') !== 'false';
 
 const state={
@@ -258,11 +258,13 @@ async function addItem(i){
 
   if(!state.demo){
     const vData = await analyzeBackend(it);
-    it.v = vData.verdict === 'safe' ? 'safe' : (vData.verdict === 'suspicious' ? 'warn' : 'bad');
-    it.sc = vData.score || vData.risk_score || 50;
-    it.act = vData.action || vData.recommended_action || 'warn';
-    it.why = vData.reason || vData.explanation_en || 'Analyzed';
-    it.evidence = vData.evidence;
+    const vObj = (typeof vData.verdict === 'object' && vData.verdict !== null) ? vData.verdict : vData;
+    const vLabel = vObj.label || vData.verdict || 'safe';
+    it.v = vLabel === 'safe' ? 'safe' : (vLabel === 'suspicious' ? 'warn' : 'bad');
+    it.sc = vData.score || vObj.risk_score || 50;
+    it.act = vData.action || vObj.recommended_action || 'warn';
+    it.why = vData.reason || vObj.explanation_en || 'Analyzed';
+    it.evidence = vData.evidence || vObj.evidence;
   }
 
   state.items.unshift(it);
@@ -329,9 +331,9 @@ function render(){
  $('#demoSw').onclick=()=>{state.demo=!state.demo;saveSettings();render()};
  $('#loc').onclick=()=>{state.local=!state.local;saveSettings();render()};
  $('#api').oninput=e=>{state.api=e.target.value;saveSettings()};
- $('#setWifiIp').onclick=()=>{state.api='http://192.168.137.221:8000';$('#api').value=state.api;saveSettings()};
- $('#setUsbIp').onclick=()=>{state.api='http://localhost:8000';$('#api').value=state.api;saveSettings()};
- $('#setEmuIp').onclick=()=>{state.api='http://10.0.2.2:8000';$('#api').value=state.api;saveSettings()};
+ $('#setWifiIp').onclick=()=>{state.api='http://192.168.137.221:8080';$('#api').value=state.api;saveSettings()};
+ $('#setUsbIp').onclick=()=>{state.api='http://localhost:8080';$('#api').value=state.api;saveSettings()};
+ $('#setEmuIp').onclick=()=>{state.api='http://10.0.2.2:8080';$('#api').value=state.api;saveSettings()};
  
  $('#testConnBtn').onclick=async()=>{
    const st = $('#connStatus');

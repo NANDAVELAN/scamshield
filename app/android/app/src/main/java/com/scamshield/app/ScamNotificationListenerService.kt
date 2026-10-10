@@ -54,7 +54,7 @@ class ScamNotificationListenerService : NotificationListenerService() {
         scope.launch {
             try {
                 // Default local emulator or LAN backend
-                val backendUrl = "http://10.0.2.2:8000/analyze"
+                val backendUrl = "http://10.0.2.2:8080/analyze"
                 val jsonPayload = JSONObject().apply {
                     put("id", "notif_${System.currentTimeMillis()}")
                     put("channel", channel)
@@ -80,10 +80,11 @@ class ScamNotificationListenerService : NotificationListenerService() {
                 if (conn.responseCode == 200) {
                     val responseStr = conn.inputStream.bufferedReader().use { it.readText() }
                     val verdictObj = JSONObject(responseStr)
-                    val verdict = verdictObj.optString("verdict", "safe")
+                    val verdictStr = verdictObj.optString("verdict", "")
+                    val verdictLabel = if (verdictStr.isNotBlank()) verdictStr else (verdictObj.optJSONObject("verdict")?.optString("label", "safe") ?: "safe")
 
-                    if (verdict == "scam") {
-                        Log.i(TAG, "SCAM DETECTED from $title! Canceling notification.")
+                    if (verdictLabel == "scam" || verdictLabel == "likely_scam") {
+                        Log.i(TAG, "SCAM DETECTED from $title ($verdictLabel)! Canceling notification.")
                         // Cancel original notification where permitted
                         try {
                             cancelNotification(sbn.key)
