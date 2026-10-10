@@ -2,7 +2,7 @@
 title ScamShield - AI Inbox Immune System
 echo ============================================================
 echo   ScamShield - AI Inbox Immune System
-echo   Starting Cognitive Defense Engine and Control Center
+echo   Starting Cognitive Defense Engine and Message Simulator
 echo ============================================================
 
 cd /d "%~dp0"
