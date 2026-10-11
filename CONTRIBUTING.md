@@ -26,7 +26,7 @@ For in-depth architectural constraints, coding rules, and tool guidelines, see [
 
 1. **Clone the repository and set up environment**:
    ```bash
-   git clone https://github.com/your-username/scamshield.git
+   git clone https://github.com/NANDAVELAN/scamshield.git
    cd scamshield
    python -m venv .venv
    source .venv/bin/activate  # On Windows: .venv\Scripts\Activate.ps1

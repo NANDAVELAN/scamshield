@@ -193,7 +193,7 @@ Generates detailed terminal output, `harness/harness_report.json`, and an audita
 ### Manual Setup
 ```bash
 # 1. Clone & create virtual environment
-git clone https://github.com/your-username/scamshield.git && cd scamshield
+git clone https://github.com/NANDAVELAN/scamshield.git && cd scamshield
 python -m venv .venv && source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # 2. Install dependencies & configure env
@@ -316,7 +316,7 @@ gcloud run deploy scamshield --source . --port 8080 --region us-central1 --allow
 
 ## 👤 Author & Acknowledgments
 
-**Author**: [ScamShield Contributors](https://github.com/your-username/scamshield)
+**Author**: [NANDAVELAN](https://github.com/NANDAVELAN/scamshield)
 
 Special thanks to the open-source tools and frameworks powering ScamShield:
 - **Google Agent Development Kit (ADK)**: Multi-agent orchestration and schema-enforced LLM agents.

@@ -36,7 +36,7 @@ ScamShield is engineered with strict mathematical and architectural constraints:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/scamshield.git
+git clone https://github.com/NANDAVELAN/scamshield.git
 cd scamshield
 
 # 2. Initialize Python virtual environment (Python 3.11 recommended)
