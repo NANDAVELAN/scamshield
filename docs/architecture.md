@@ -1,6 +1,65 @@
 # 🏛️ ScamShield Architecture
 
-## 1. Cognitive Architecture: Two-Speed Defense
+## 1. System Architecture Diagram
+
+```mermaid
+flowchart TD
+    subgraph MobileDevice["📱 Android Mobile Device (Capacitor + Kotlin)"]
+        Notif["Incoming Notification\n(WhatsApp / SMS / Gmail)"]
+        NLS["ScamNotificationListenerService\n(Kotlin Native Plugin)"]
+        Bridge["NotificationBridgePlugin\n(Capacitor JS Bridge)"]
+        UI["Android Phone Application UI\n(Vanilla JS / Sealed Safe Feed)"]
+        Onboard["Onboarding Banner\n(Grant Access Settings)"]
+        BlockAlert["Local High-Priority Alert\n'ScamShield blocked a scam from X'"]
+
+        Notif --> NLS
+        NLS -->|Extract Title, Body, Channel| Bridge
+        NLS -->|Verdicts == Scam| BlockAlert
+        NLS -.->|Cancel Original Notification| Notif
+        Bridge -->|messageReceived Event| UI
+        Bridge --> Onboard
+    end
+
+    subgraph BackendAPI["⚡ Python 3.11 FastAPI Backend"]
+        API["POST /analyze\nGET /health\nGET /stream (SSE)"]
+        Guard["Guardrails Harness\nPII Redaction + Injection Defense"]
+        Reflex["System 1: Reflex Gate (Jev / Heuristic)\n< 100ms Screening (0.0 - 1.0)"]
+        
+        UI -->|POST /analyze| API
+        UI -.->|Listen Live Logs| API
+        API --> Guard
+        Guard --> Reflex
+
+        subgraph ADK["🧠 Google ADK Multi-Agent Engine (System 2)"]
+            Triage["1. Triage Agent (LlmAgent)"]
+            Par["2. ParallelAgent Investigators"]
+            InvURL["URL Investigator\n(Lookalike, Homoglyph, Domain Age)"]
+            InvSender["Sender Investigator\n(Spoofing, SPF/DKIM, Header Check)"]
+            InvAttach["Attachment Investigator\n(Double Ext .pdf.exe, Dangerous Files)"]
+            Synth["3. Verdict Synthesizer\n(Structured Verdict Schema)"]
+
+            Triage --> Par
+            Par --> InvURL & InvSender & InvAttach
+            InvURL & InvSender & InvAttach --> Synth
+        end
+
+        subgraph Fallback["🔄 Fallback Chain & Offline Engine"]
+            Gemini["1. Gemini Pro (GEMINI_API_KEY)"]
+            OpenRouter["2. OpenRouter (OPENROUTER_API_KEY)"]
+            Ollama["3. Local Ollama (qwen2.5:7b)"]
+            Rules["4. Deterministic Rules Engine\n(100% Offline Guaranteed)"]
+            
+            Gemini --> OpenRouter --> Ollama --> Rules
+        end
+
+        Reflex -->|Score >= 0.30 (Suspicious)| ADK
+        Reflex -->|Score < 0.30 (Low Risk)| Rules
+        ADK --> Fallback
+        Fallback -->|Strict Pydantic Verdict| API
+    end
+```
+
+## 2. Cognitive Architecture: Two-Speed Defense
 
 ScamShield implements a **two-speed cognitive defense architecture** with verifiable human consent, resilient provider failover, and strict safety invariants:
 
@@ -39,7 +98,7 @@ graph TD
 
 ---
 
-## 2. Five-Layer Safety Guardrails
+## 3. Five-Layer Safety Guardrails
 
 Safety invariants are enforced by deterministic Python modules rather than relying on LLM self-policing:
 
@@ -71,7 +130,7 @@ Safety invariants are enforced by deterministic Python modules rather than relyi
 
 ---
 
-## 3. Resilient Provider Routing & Fallback Chain
+## 4. Resilient Provider Routing & Fallback Chain
 
 ScamShield ensures defense continuity during cloud API failures or rate limits via `llm/router.py`:
 
