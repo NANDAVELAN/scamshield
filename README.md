@@ -25,9 +25,10 @@
 +-----------------------------------------------------------------------------------------+
 ```
 
-*(Placeholders for visual assets; place recordings and diagrams in `docs/images/`)*
-- ![ScamShield Simulator Demo](docs/images/simulator_demo.png)
-- ![ScamShield Phone Application](docs/images/phone_app.png)
+<p align="center">
+  <img src="docs/images/simulator_demo.png" alt="ScamShield Simulator Demo" width="48%" />
+  <img src="docs/images/phone_app.png" alt="ScamShield Phone Application" width="48%" />
+</p>
 
 ---
 
@@ -236,8 +237,8 @@ ScamShield/
 ├── docs/                              # Technical documentation
 │   ├── architecture.md                # In-depth cognitive architecture & guardrails
 │   ├── api_reference.md               # Complete REST API & SSE event reference
-│   ├── demo_script.md                 # 4-minute demo script & choreography guide
-│   └── images/                        # Screenshots, diagrams, and media placeholders
+│   ├── demo_script.md                 # Interactive walkthrough & end-to-end evaluation guide
+│   └── images/                        # UI screenshots, architecture diagrams, and media
 ├── guardrails/                        # Five-layer deterministic safety guardrails
 │   ├── action_policy.py               # Reversible action allowlist & autonomy dial
 │   ├── defang.py                      # URL defanging (hxxp://, [.])
@@ -621,8 +622,8 @@ gcloud run deploy scamshield \
 ## ⚠️ Limits & Responsible Use
 
 > [!IMPORTANT]
-> - **Mock Threat Intelligence**: All domain reputation metrics, WHOIS registration ages, and sender fraud reports in `scamshield_agent/data/` are **synthetic mock datasets** created strictly for prototype demonstration and testing.
-> - **Prototype Decision Support**: ScamShield is designed as a **decision-support advisory system**. It assists users in identifying deceptive patterns but does not replace professional financial or legal counsel.
+> - **Synthetic Threat Intelligence**: All domain reputation metrics, WHOIS registration ages, and sender fraud reports in `scamshield_agent/data/` are **synthetic mock datasets** curated for offline sandbox evaluation, continuous testing, and reproducible benchmarks.
+> - **Decision-Support Advisory System**: ScamShield is designed as an **autonomous decision-support advisory system**. It assists users and operators in identifying deceptive patterns with explainable evidence, but does not replace professional financial or legal counsel.
 > - **Synthetic Test Payloads**: All sample messages in `tests/sample_messages.json` and harness suites utilize fictionalized phone numbers and non-resolving domains (`*.click`, `*.in`, `*.vip`). Do not use real victim messages containing sensitive credentials for testing.
 > - **Non-Destructive Guarantee**: ScamShield does **not** permanently delete messages or modify user communication accounts. All defense interventions are isolated to reversible sandboxes.
 

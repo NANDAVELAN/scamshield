@@ -1,13 +1,12 @@
-# 🎤 ScamShield Demo Script & Presentation Playbook
+# 🎬 ScamShield Walkthrough & Live Demonstration Guide
 
-> **Tagline:** *"An immune system for your inbox."*  
-> **Sub-tagline:** *"Think fast. Think hard. Ask a human."*
+> **Tagline:** *"An immune system for your inbox: Think fast. Think hard. Ask a human."*
 
 ---
 
 ## 1. Executive Summary & Key Differentiators
 
-Most AI defense prototypes act as basic black boxes: *message in → single LLM call → "scam" label*.
+Most AI security tools act as basic black boxes: *message in → single LLM call → "scam" label*.
 ScamShield introduces **five architectural differentiators**:
 
 | # | Differentiator | Technical Proof |
@@ -20,20 +19,20 @@ ScamShield introduces **five architectural differentiators**:
 
 ---
 
-## 2. 4-Minute Presentation Arc
+## 2. End-to-End Walkthrough Arc
 
-| Time | Stage | Action / Speaking Point |
+| Stage | Focus Area | Workflow / Architecture Milestone |
 |---|---|---|
-| **0:00 - 0:30** | **The Hook** | *"Everyone has received an urgent SMS claiming their bank account or electricity is suspended. Victims have seconds to decide. Traditional spam filters are opaque black boxes that either block silently or fail completely."* |
-| **0:30 - 1:15** | **The Immune System Solution** | Present the cognitive architecture: System 1 Reflex Gate (fast defense) + System 2 Deep Agent Investigation + 5-Layer Guardrails + Human Approval Gate. |
-| **1:15 - 2:00** | **Act 1: Simulator Attack Run** | Open the Attack Simulator (`http://localhost:8080/simulator`). Select the **Fake SBI KYC Suspension** scenario. Watch the reflex triage flash immediate high-urgency detection, followed by parallel specialist investigator nodes illuminating in real time. |
-| **2:00 - 2:45** | **Act 2: Evidence & Human Consent** | Show the synthesized verdict and bilingual explanation (English + Tamil). Highlight the proposed defense action (`quarantine`). Show that the message is sealed/blurred pending human consent. Click **Approve Action**; show the logged execution in the audit trail. |
-| **2:45 - 3:30** | **Act 3: Outage Resilience & Reversibility** | Demonstrate action reversibility by clicking **Undo Action**. Explain how the router trips circuit breakers during API failures and falls back automatically to local rules with zero downtime. |
-| **3:30 - 4:00** | **Summary & Roadmap** | Show the Evaluation Harness (`python -m harness.run`) proving 100% catch rate on the golden test suite with zero false positives. Conclude: *"Scammers rely on users acting before they think. ScamShield thinks faster, investigates deeper, and always asks for consent."* |
+| **Phase 1: Inbound Intake** | **Threat Interception** | Untrusted inbound messages (SMS, Email, WhatsApp) enter through the input sanitization and PII redaction layer. |
+| **Phase 2: Reflex Triage** | **Sub-100ms Gate** | The Reflex Gate (TypeSafe AI / Jev or Gemini Flash structured output) rapidly evaluates threat indicators to bypass heavy computation for benign alerts. |
+| **Phase 3: Deep Investigation** | **Simulator Attack Run** | When suspicious signals emerge, Google ADK parallel specialist agents (URL/Domain, Sender/SPF, Attachment/MIME) analyze deep evidence concurrently. |
+| **Phase 4: Synthesis & Consent** | **Evidence & Human Gate** | Synthesizer compiles an explainable bilingual verdict (English + regional language) and proposes reversible defense actions (`quarantine`). High-risk content remains sealed pending human approval. |
+| **Phase 5: Reversibility & Audit** | **Audit Trail & Undo** | Operators can approve, reject, or undo actions instantly. All decisions are captured in an append-only JSON audit log. |
+| **Phase 6: Empirical Verification** | **Invariant Proofs (I1–I8)** | Running `python -m harness.run` programmatically proves zero regressions across the golden and adversarial test suites. |
 
 ---
 
-## 3. Demo Choreography Checklist
+## 3. System Verification & Walkthrough Checklist
 
 - [ ] Backend running locally: `python -m server.main` (or `./start.sh` / `.\start.ps1`) on port `8080`.
 - [ ] Message Simulator loaded at `http://localhost:8080/simulator`.
