@@ -57,7 +57,7 @@ ScamShield approaches threat defense like a biological immune system:
 graph TD
     Inbound[Inbound Message: SMS / Gmail / WhatsApp] --> InputGuard[1. Input Guard: Sanitization & Injection Filter]
     InputGuard --> Redact[2. PII Redaction: Phones, Accounts Masked]
-    Redact --> ReflexGate{3. Reflex Gate: <100ms} jev
+    Redact --> ReflexGate{3. Reflex Gate: <100ms 'jev' } 
     
     ReflexGate -- "Low Risk (<30%)" --> FastVerdict[Direct Safe Verdict]
     ReflexGate -- "Suspicious (>=30%)" --> Investigation[4. System-2 Deep Multi-Agent Investigation]
