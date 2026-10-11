@@ -92,6 +92,98 @@ graph TD
 
 ---
 
+## ⚡ System 1: The Reflex Gate & Jev Triage Agent
+
+### ❓ Why It Is Used
+
+In modern messaging environments (SMS, WhatsApp, Gmail), **latency and API economics make running a heavy multi-agent LLM reasoning graph on every inbound message impractical**:
+1. **Human Reaction Time**: When a notification sounds, a victim typically glances at their phone for 2 to 3 seconds. A full multi-agent LLM pipeline with sequential reasoning and tool calls requires 3 to 8 seconds. If defense introduces multi-second delays, users either disable the protection or click the malicious link before the scan finishes.
+2. **Economic & Rate-Limit Efficiency**: Over 85% of incoming messages are benign (authentic bank OTP codes, courier delivery receipts, personal messages). Routing every benign message through a large LLM consumes excessive tokens, incurs high API costs, and risks exhausting cloud rate limits.
+3. **The Reflex Gate Solution**: Inspired by the human nervous system's rapid reflex arc, **System 1** inspects every inbound message in **under 100 milliseconds (<100ms)**. It extracts threat signals, gauges urgent pressure tactics, and assigns an initial scam probability (0.0 to 1.0) and urgency score (1 to 5).
+
+### ⚙️ How It Works: The 3-Tier Reflex Cascade
+
+The reflex gate (`triage/jev_client.py`) is engineered to be resilient, cascading across three distinct evaluation layers:
+
+| Layer | Provider | Latency | Role & Mechanism |
+|---|---|---|---|
+| **Primary** | **TypeSafe AI / Jev System One** | ~40–80 ms | High-velocity specialized triage endpoint evaluating linguistic deception markers and scam probability via `@typesafe-ai/sdk`. |
+| **Fallback 1** | **Google Gemini Flash (JSON Schema)** | ~250–400 ms | If the Jev API key is absent or unavailable, cascades immediately to `gemini-2.5-flash` with strict Pydantic JSON schema constraints (`TriageResult`). |
+| **Fallback 2** | **Deterministic Rules Engine (`triage/rules.py`)** | <5 ms | If cloud APIs encounter rate limits or internet connectivity is unavailable, runs local heuristic regexes, banking short-code lookups, and keyword analysis with **zero network dependencies**. |
+
+### 🚦 Decision Boundary & Gating Logic
+
+The reflex gate controls the execution flow into the rest of the application:
+```python
+# From server/main.py
+if triage_res.scam_probability < CONTROL_STATE["ignore_threshold"] and triage_res.urgency <= 2:
+    # Low probability (<30%) and low urgency: bypass deep agents completely
+    return Verdict(risk_score=..., label="safe", recommended_action="none")
+else:
+    # High probability (>=30%) or urgent threat: trigger System-2 Multi-Agent Investigation
+    provider_used, verdict, cache_hit = await analyze_with_router(router, req_dict)
+```
+- **Benign Path (<30% Risk & Low Urgency)**: Instant safe verdict without invoking heavy LLMs. Zero API latency and zero cloud token cost.
+- **Escalation Path (≥30% Risk or High Urgency)**: Automatically routes into System 2 for deep forensic investigation.
+
+---
+
+## 🧠 System 2: Deep Multi-Agent LLM Investigation
+
+### ❓ Why It Is Used
+
+When an inbound message is identified as potentially fraudulent, simple pattern matching is no longer sufficient. Modern financial phishing campaigns employ sophisticated evasion tactics:
+- **Homoglyph Brand Mimicry**: Registering deceptive domains like `sbi-kyc-update.in` or using lookalike Unicode characters (`rn` for `m`, `0` for `o`).
+- **Display Name & Authentication Spoofing**: Masquerading as trusted brands while failing SPF/DKIM email authentication.
+- **Disguised Payloads**: Concealing Windows binaries and malware macros under double extensions (`KYC_Form.pdf.exe`).
+- **Coercive Psychological Urgency**: Threatening immediate bank account suspension or power disconnection within hours.
+
+A single monolithic prompt LLM is prone to hallucinations, cannot verify technical indicators (like domain registration ages or file MIME signatures), and provides opaque "black box" conclusions without auditable proof.
+
+**System 2** utilizes the **Google Agent Development Kit (ADK)** to orchestrate specialized, tool-enabled AI investigators. Each agent is constrained to its specific domain of expertise, producing an **explainable evidence trail** grounded in factual data.
+
+### 🔬 The Google ADK Multi-Agent Architecture
+
+The multi-agent graph in [scamshield_agent/agent.py](scamshield_agent/agent.py) is constructed using Google ADK's `SequentialAgent`, `ParallelAgent`, and `LlmAgent`:
+
+1. **Entity Extractor Agent (`fast_model`: Gemini Flash)**:
+   - Identifies and extracts domain URLs, sender contact identifiers, monetary figures, and attachment filenames.
+   - Triggers `guardrails/redact.py` to strip real phone numbers and bank account numbers before any downstream model calls.
+2. **Parallel Specialist Investigators (`ParallelAgent`)**:
+   - **URL & Domain Investigator**: Analyzes WHOIS domain registration age, checks malicious blocklists, and executes homoglyph Levenshtein distance calculations against verified brands (`scamshield_agent/data/brands.json`).
+   - **Sender & Authentication Investigator**: Inspects sender fraud complaint history (`sender_reputation.json`) and verifies email spoofing via SPF/DKIM authentication headers.
+   - **Attachment Threat Investigator**: Evaluates executable extensions, macro payloads, and MIME anomalies.
+   - **Campaign Clustering Tool**: Correlates the message across phone numbers and communication channels to detect organized syndicate campaigns.
+3. **Verdict Synthesizer Agent (`strong_model`: Gemini 2.5 Pro)**:
+   - Aggregates the structured findings from all parallel investigators.
+   - Synthesizes a calibrated risk score (0 to 100), categorical label (`scam`, `suspicious`, `safe`), and cites each item of corroborating evidence.
+   - **Bilingual Explanation**: Generates plain-language rationales in both English and regional languages (e.g., Tamil) so elderly and non-technical users understand exactly why the message is dangerous.
+4. **Incident Proposal Agent**:
+   - Formulates the proposed defense action (`quarantine`, `block_sender`, `block_url`).
+   - Packages the case into an `Incident` record stored in `server/store.py` awaiting **human authorization**.
+
+### 🔄 Resilient LLM Router & Fallback Chain
+
+To guarantee that ScamShield never goes down when an external API provider experiences rate limits or outages, all LLM operations flow through [llm/router.py](llm/router.py):
+
+```mermaid
+graph LR
+    Req[Message Payload] --> GPro[1. Google Gemini 2.5 Pro]
+    GPro -- "Failure / Timeout / Circuit Open" --> GFlash[2. Google Gemini 2.5 Flash]
+    GFlash -- "Failure / Timeout" --> OpenRouter[3. LiteLLM OpenRouter]
+    OpenRouter -- "Failure / Timeout" --> Ollama[4. Local Ollama: Qwen2.5]
+    Ollama -- "Failure / Offline" --> Rules[5. Deterministic Rules Scorer]
+    Rules --> Res[Guaranteed Safe Verdict]
+```
+
+- **Automatic Failover**: If Gemini 2.5 Pro fails or times out, the router cascades down to Gemini 2.5 Flash, then OpenRouter, then local Ollama (`qwen2.5:7b`), and finally to local deterministic rules.
+- **Circuit Breaker**: Automatically trips after consecutive upstream failures, isolating flaky remote endpoints and maintaining sub-second user responsiveness.
+- **SHA-256 Verdict Cache**: Hashes message payloads to deliver instant 0ms verdicts on repeated phishing campaigns.
+- **Privacy Mode**: Allows users to restrict all processing to local Ollama and offline rules, guaranteeing that **zero bytes of message content leave the local device**.
+
+
+---
+
 ## ✨ Features
 
 - **Sub-100ms Reflex Triage**: Filters safe messages instantly while escalating threats to deeper scrutiny.
