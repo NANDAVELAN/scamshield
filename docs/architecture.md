@@ -23,7 +23,7 @@ flowchart TD
     subgraph BackendAPI["⚡ Python 3.11 FastAPI Backend"]
         API["POST /analyze\nGET /health\nGET /stream (SSE)"]
         Guard["Guardrails Harness\nPII Redaction + Injection Defense"]
-        Reflex["System 1: Reflex Gate (Jev / Heuristic)\n< 100ms Screening (0.0 - 1.0)"]
+        Reflex["System 1: Reflex Gate (Jev / Heuristic)\nSub-100ms Screening (0.0 - 1.0)"]
         
         UI -->|POST /analyze| API
         UI -.->|Listen Live Logs| API
@@ -52,8 +52,8 @@ flowchart TD
             Gemini --> OpenRouter --> Ollama --> Rules
         end
 
-        Reflex -->|Score >= 0.30 (Suspicious)| ADK
-        Reflex -->|Score < 0.30 (Low Risk)| Rules
+        Reflex -->|Suspicious: Score 0.30 to 1.00| ADK
+        Reflex -->|Low Risk: Score under 0.30| Rules
         ADK --> Fallback
         Fallback -->|Strict Pydantic Verdict| API
     end
@@ -67,10 +67,10 @@ ScamShield implements a **two-speed cognitive defense architecture** with verifi
 graph TD
     Inbound[Inbound Message: SMS / Gmail / WhatsApp] --> InputGuard[1. Input Guardrail: Length, Sanitization, Injection Filter]
     InputGuard --> Redact[2. PII Redaction: Phone, Account, PAN/Aadhaar Masking]
-    Redact --> ReflexGate{3. System-1 Reflex Gate: <100ms}
+    Redact --> ReflexGate{3. System-1 Reflex Gate: Sub-100ms Jev}
     
-    ReflexGate -- "Low Risk (<30%)" --> FastVerdict[Direct Safe Verdict]
-    ReflexGate -- "Suspicious (>=30%)" --> Investigation[4. System-2 Deep Multi-Agent Investigation]
+    ReflexGate -- "Low Risk: Under 30%" --> FastVerdict[Direct Safe Verdict]
+    ReflexGate -- "Suspicious: 30% and above" --> Investigation[4. System-2 Deep Multi-Agent Investigation]
     
     subgraph "Google ADK Multi-Agent Graph (Sequential + Parallel)"
         Investigation --> ParallelAgents["Parallel Specialists"]
