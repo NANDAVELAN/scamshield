@@ -1,5 +1,4 @@
 """FastAPI application for ScamShield cognitive defense backend and SSE streaming."""
-# Reload trigger 2
 import asyncio
 import json
 import os
@@ -23,17 +22,6 @@ from scamshield_agent.schemas import (
     TriageResult
 )
 from scamshield_agent.tools.campaign_tools import link_campaign
-import importlib
-import scamshield_agent.tools.url_tools
-import scamshield_agent.tools.sender_tools
-import triage.rules
-import triage.jev_client
-import llm.router
-importlib.reload(scamshield_agent.tools.url_tools)
-importlib.reload(scamshield_agent.tools.sender_tools)
-importlib.reload(triage.rules)
-importlib.reload(triage.jev_client)
-importlib.reload(llm.router)
 
 from triage.rules import score_rules
 from triage.jev_client import quick_triage
