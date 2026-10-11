@@ -110,40 +110,8 @@ flowchart TD
     end
 ```
 
-### 🛡️ Cognitive Defense & Safety Flow
 
-```mermaid
-graph TD
-    Inbound[Inbound Message: SMS / Gmail / WhatsApp] --> InputGuard[1. Input Guard: Sanitization & Injection Filter]
-    InputGuard --> Redact[2. PII Redaction: Phones, Accounts Masked]
-    Redact --> ReflexGate{3. Reflex Gate: Sub-100ms Jev} 
-    
-    ReflexGate -- "Low Risk: Under 30%" --> FastVerdict[Direct Safe Verdict]
-    ReflexGate -- "Suspicious: 30% and above" --> Investigation[4. System-2 Deep Multi-Agent Investigation]
-    
-    subgraph "Google ADK Multi-Agent Graph (Sequential + Parallel)"
-        Investigation --> ParallelAgents["Parallel Specialists"]
-        ParallelAgents --> URLAgent[URL & Domain Investigator]
-        ParallelAgents --> SenderAgent[Sender & SPF/DKIM Investigator]
-        ParallelAgents --> AttachAgent[Attachment & MIME Investigator]
-        ParallelAgents --> CampaignAgent[Campaign Clustering]
-        
-        URLAgent --> Synthesizer[Verdict Synthesizer Agent: Gemini Pro]
-        SenderAgent --> Synthesizer
-        AttachAgent --> Synthesizer
-        CampaignAgent --> Synthesizer
-        Synthesizer --> IncidentAgent[Incident Proposal Agent]
-    end
-    
-    IncidentAgent --> OutputGuard[5. Output Guard: URL Defanging & Consistency]
-    OutputGuard --> ProposedAction[6. Defense Action Proposal: Quarantine / Block]
-    ProposedAction --> HumanGate{Human Consent Gate}
-    HumanGate -- Approved --> Executor[7. Safe Executor: Reversible Actions]
-    HumanGate -- Rejected --> AuditLog[Append-Only Audit Log]
-    Executor --> AuditLog
-```
 
-For complete architecture details, see [docs/architecture.md](docs/architecture.md).
 
 ---
 
