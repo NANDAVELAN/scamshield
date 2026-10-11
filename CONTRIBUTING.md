@@ -2,6 +2,8 @@
 
 Thank you for your interest in contributing to ScamShield! We welcome contributions that improve safety, expand detector rules, and strengthen scam defenses.
 
+For in-depth architectural constraints, coding rules, and tool guidelines, see [docs/development.md](docs/development.md) and [AGENTS.md](AGENTS.md).
+
 ---
 
 ## 1. Development Principles & Code of Conduct

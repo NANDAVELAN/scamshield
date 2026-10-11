@@ -1,4 +1,4 @@
-"""End-to-End Rehearsal verifying the 6 Definition of Done requirements against live server."""
+"""End-to-End Verification asserting system requirements against live server."""
 import json
 import urllib.request
 import time
@@ -24,14 +24,14 @@ def post(path, data):
         return json.loads(resp.read().decode())
 
 def main():
-    print("[E2E REHEARSAL] Verifying Definition of Done against live ScamShield backend...")
+    print("[E2E VERIFICATION] Asserting requirements against live ScamShield backend...")
     
     # 0. Health check
     h = get("/health")
     assert h["status"] == "ok"
     print("  [PASS] Health check OK:", h)
 
-    # 1. Paste scam message #1 -> returns verdict, evidence, provider, proposed action
+    # 1. Analyze scam message #1 -> returns verdict, evidence, provider, proposed action
     scam1 = {
         "channel": "sms",
         "sender": "VM-SBIINB",
@@ -40,7 +40,7 @@ def main():
         "attachments": ["Yono_Update.apk"]
     }
     res1 = post("/analyze", scam1)
-    print("  [PASS] Rehearsal 1: Analysis successful")
+    print("  [PASS] Step 1: Threat analysis successful")
     print(f"      Incident ID: {res1['incident_id']}")
     print(f"      Risk Score: {res1['verdict']['risk_score']}/100 | Label: {res1['verdict']['label']}")
     print(f"      Provider Used: {res1['provider_used']}")
@@ -54,7 +54,7 @@ def main():
     inc1_id = res1["incident_id"]
     app_res = post(f"/incidents/{inc1_id}/approve", {})
     assert app_res["status"] == "success"
-    print(f"  [PASS] Rehearsal 2a: Incident {inc1_id} approved & quarantined:", app_res.get("details", app_res.get("message")))
+    print(f"  [PASS] Step 2a: Incident {inc1_id} approved & quarantined:", app_res.get("details", app_res.get("message")))
 
     # Analyze second scam and reject
     scam2 = {
@@ -68,26 +68,26 @@ def main():
     inc2_id = res2["incident_id"]
     rej_res = post(f"/incidents/{inc2_id}/reject", {})
     assert rej_res["status"] == "success"
-    print(f"  [PASS] Rehearsal 2b: Incident {inc2_id} rejected by operator:", rej_res.get("details", rej_res.get("message")))
+    print(f"  [PASS] Step 2b: Incident {inc2_id} rejected by operator:", rej_res.get("details", rej_res.get("message")))
 
     # Check incident retrieval
     inc1 = get(f"/incidents/{inc1_id}")
     assert inc1["incident_id"] == inc1_id
-    print(f"  [PASS] Rehearsal 2c: Incident {inc1_id} status verified: {inc1['status']}")
+    print(f"  [PASS] Step 2c: Incident {inc1_id} status verified: {inc1['status']}")
 
     # 3. Message Simulator UI route check
     sim_req = urllib.request.Request(f"{BASE_URL}/simulator/")
     with urllib.request.urlopen(sim_req) as resp:
         assert resp.status == 200
-        print("  [PASS] Rehearsal 3: Attack & Defense Simulator served at /simulator")
+        print("  [PASS] Step 3: Attack & Defense Simulator served at /simulator")
 
     # 4. Root redirect to /simulator check
     root_req = urllib.request.Request(f"{BASE_URL}/", headers={"User-Agent": "Mozilla/5.0"})
     with urllib.request.urlopen(root_req) as resp:
         assert resp.status == 200
-        print("  [PASS] Rehearsal 4: Root redirect to /simulator verified")
+        print("  [PASS] Step 4: Root redirect to /simulator verified")
 
-    print("\n[SUCCESS] ALL DEFINITION OF DONE REHEARSAL CHECKS PASSED PERFECTLY!")
+    print("\n[SUCCESS] ALL SYSTEM VERIFICATION CHECKS PASSED PERFECTLY!")
 
 if __name__ == "__main__":
     main()

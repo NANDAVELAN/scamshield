@@ -7,7 +7,7 @@ def test_harness_invariants_pass():
     assert all_passed, f"One or more invariants failed: {[i for i in invariants if not i['passed']]}"
 
 def test_harness_golden_benchmarks():
-    """Verify golden benchmarks meet challenge thresholds."""
+    """Verify golden benchmarks meet safety thresholds."""
     metrics = run_golden_suite()
     assert metrics["catch_rate"] >= 90.0
     assert metrics["false_positive_rate"] <= 5.0

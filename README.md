@@ -1,6 +1,6 @@
 # 🛡️ ScamShield
 
-> **An immune system for your inbox: Think fast. Think hard. Ask a human.**
+> **An anti-scam defense agent that investigates suspicious messages before you open them.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python: 3.11+](https://img.shields.io/badge/Python-3.11%2B-brightgreen.svg)](https://www.python.org/)
@@ -32,14 +32,22 @@
 
 ---
 
-## 💡 What It Does
+## 💡 What It Is & The Real-World Problem
 
-ScamShield is an open-source, human-in-the-loop cognitive defense system that protects users from financial phishing, fake utility cutoffs, UPI refund traps, and malware delivered via SMS, Gmail, and messaging apps.
+Every day, mobile and desktop users receive deceptive messages across SMS, WhatsApp, Gmail, and messaging apps—including fake bank KYC suspensions, power-cut utility extortion, UPI cashback traps, and disguised malware attachments. Victims often have only 2 to 3 seconds to evaluate an alert while facing artificial urgency and psychological pressure.
 
-Inspired by biological immunology, ScamShield implements a **two-speed cognitive defense architecture**:
-- **Innate Immunity (System 1 Reflex Gate)**: Sub-100ms triage filters benign messages instantly, preventing user delay and conserving cloud tokens.
-- **Adaptive Immunity (System 2 Deep Multi-Agent Investigation)**: Parallel Google ADK specialists dissect novel, sophisticated threats (URL/WHOIS, Sender/SPF, Attachment/MIME).
-- **Self-Tolerance & Human Consent**: The agent **only proposes** reversible actions (`quarantine`, `block_sender`, `block_url`). A human operator approves execution. **Zero permanent deletion paths exist anywhere in the system.**
+**ScamShield** is an open-source, human-in-the-loop security agent that intercepts and interrogates suspicious messages before you open them. Designed for everyday mobile users, families, and security-conscious operators, ScamShield screens inbound alerts in sub-100ms, deeply investigates complex threats with parallel specialized AI agents, and keeps malicious messages blurred until a human approves action.
+
+---
+
+## 🧬 How It Works: The Immune System Model
+
+ScamShield approaches threat defense like a biological immune system:
+
+1. **Innate Immunity (Reflex Triage Gate)**: Incoming messages are inspected in under 100ms by a lightweight reflex model that instantly passes benign notifications and escalates suspicious signals.
+2. **Adaptive Immunity (Deep Multi-Agent Investigation)**: High-risk messages trigger parallel specialist agents (URL/WHOIS, Sender/SPF, Attachment/MIME) to dissect the threat evidence.
+3. **Immunological Memory (Campaign Tracking)**: Attack patterns are clustered across senders and communication channels to detect organized syndicate campaigns.
+4. **Self-Tolerance & Human Consent**: The agent **only proposes** reversible actions (`quarantine`, `block_sender`, `block_url`). A human operator approves execution. **Zero permanent deletion code paths exist anywhere in the system.**
 
 ---
 
@@ -76,15 +84,15 @@ graph TD
     Executor --> AuditLog
 ```
 
-Detailed design notes are available in [docs/architecture.md](docs/architecture.md).
+For complete architecture details, see [docs/architecture.md](docs/architecture.md).
 
 ---
 
 ## ⚡ System 1: The Reflex Gate & Jev Triage Agent
 
 ### ❓ Why It Is Used
-- **Human Reaction Window**: Users glance at incoming notifications for 2–3 seconds. Deep multi-agent LLM reasoning takes 3–8 seconds; waiting for full reasoning before alarming the user creates an unacceptable exposure window.
-- **Economic & Rate-Limit Efficiency**: >85% of inbound messages are authentic (banking OTPs, delivery alerts). Invoking large cloud LLMs for every benign ping incurs unnecessary API fees and risks provider rate throttling.
+- **Human Reaction Window**: Users glance at notifications for 2–3 seconds. Deep multi-agent LLM reasoning takes 3–8 seconds; waiting for full reasoning before alarming the user creates an unacceptable exposure window.
+- **Economic & Rate-Limit Efficiency**: Over 85% of inbound messages are authentic (bank OTPs, delivery updates). Invoking large cloud LLMs for every ping incurs unnecessary API fees and risks provider rate limits.
 - **Sub-100ms Screening**: System 1 inspects every inbound message in **<100ms**, extracting deception markers, pressure tactics, and assigning an initial scam probability (0.0–1.0) and urgency score (1–5).
 
 ### ⚙️ How It Works: 3-Tier Reflex Cascade
@@ -150,7 +158,7 @@ In security systems, **the payload being analyzed is untrusted, adversarial text
 ## 🔬 Safety & Invariants Evaluation Harness
 
 ### ❓ Why It Is Used
-Replaces subjective evaluation with continuous, quantitative, regression-resistant verification across curated benchmark datasets.
+Replaces subjective impressions with continuous, quantitative, regression-resistant verification across curated benchmark datasets.
 
 ### 🧪 Test Suites & Invariant Guarantees ([harness/invariants.py](harness/invariants.py))
 - **Golden Suite ([golden.json](harness/suites/golden.json))**: 12 real-world scam archetypes (KYC phishing, electricity cutoffs, part-time jobs) + 8 authentic messages. Target: **100.0% Catch Rate, 0.0% False Positives**.
@@ -202,7 +210,7 @@ python -m uvicorn server.main:app --host 127.0.0.1 --port 8080 --reload
 - **Attack & Defense Simulator**: [http://127.0.0.1:8080/simulator](http://127.0.0.1:8080/simulator)
 - **Phone Application (Web Preview)**: [http://127.0.0.1:8080/app](http://127.0.0.1:8080/app)
 - **Interactive OpenAPI Documentation**: [http://127.0.0.1:8080/docs](http://127.0.0.1:8080/docs)
-- **Live Walkthrough Guide**: See [docs/demo_script.md](docs/demo_script.md) for step-by-step evaluation flows.
+- **Demo Scenarios Walkthrough**: See [docs/demo-scenarios.md](docs/demo-scenarios.md) for 5 concrete sample test cases.
 
 ---
 
@@ -211,7 +219,7 @@ python -m uvicorn server.main:app --host 127.0.0.1 --port 8080 --reload
 ```
 ScamShield/
 ├── app/                               # Native Android application (Capacitor 6 + Kotlin bridge)
-├── docs/                              # Technical docs (architecture.md, api_reference.md, demo_script.md)
+├── docs/                              # Technical docs (architecture.md, api_reference.md, demo-scenarios.md, development.md)
 ├── guardrails/                        # 5 deterministic safety guardrails (input, redact, tool, output, action)
 ├── harness/                           # Safety evaluation harness (invariants I1-I8, golden & adversarial suites)
 ├── llm/                               # Multi-tier provider routing (Gemini, OpenRouter, Ollama, circuit breaker)
@@ -219,7 +227,7 @@ ScamShield/
 ├── scripts/                           # CLI helper scripts (setup, run, test, harness)
 ├── server/                            # FastAPI backend (REST API, SSE telemetry, store, executor, cache)
 ├── simulator/                         # Interactive attack sandbox UI (preset attacks, SSE visualizer)
-├── tests/                             # Unit & integration test suites (sample_messages.json, rehearsal script)
+├── tests/                             # Unit & integration test suites (sample_messages.json, verify_e2e.py)
 ├── Dockerfile                         # Container definition
 ├── requirements.txt                   # Pinned Python dependencies
 └── Makefile                           # Developer task runner (make run, test, harness)
@@ -252,9 +260,35 @@ python -m harness.run
 # 3. Run frontend safeguard assertions
 node tests/test_frontend_safeguards.js
 
-# 4. Run end-to-end rehearsal against live server
-python tests/rehearse_e2e.py
+# 4. Run end-to-end verification against live server
+python tests/verify_e2e.py
 ```
+
+---
+
+## ❓ Frequently Asked Questions (FAQ)
+
+- **Is user data exposed to cloud LLM providers?**  
+  No. Inbound text passes through `guardrails/redact.py` before any model call, deterministically masking 10-digit mobile numbers, account IDs, and cards. Users can also enable **Privacy Mode** to run 100% locally on Ollama and offline rules.
+- **How are false positives prevented on authentic banking alerts?**  
+  Legitimate transactional messages (`VM-HDFCBK`) lack external URLs and follow registered financial syntax. The reflex gate and heuristic rules require corroborated threat evidence before escalating risk.
+- **Why use multiple models instead of a single LLM?**  
+  A single model is either too slow for notification glances or too weak to dissect complex threats. ScamShield pairs a sub-100ms reflex triage gate with deep parallel specialist agents and a 5-tier fallback router.
+- **How are prompt injections defended against?**  
+  Inbound text is treated as untrusted data. `guardrails/input_guard.py` catches injection signatures, and Invariant I6 guarantees that injection text cannot lower threat scores.
+- **Can ScamShield read end-to-end encrypted WhatsApp messages?**  
+  ScamShield operates strictly at the OS notification listener layer (with user consent). It never accesses chat databases, decrypts private storage, or intercepts background conversations.
+
+---
+
+## ⚠️ Status & Limitations
+
+> [!IMPORTANT]
+> - **Prototype Decision Support**: ScamShield is an **autonomous decision-support advisory system**. It flags deceptive indicators and recommends actions, but does not provide financial or legal guarantees.
+> - **Synthetic Threat Intelligence**: Domain reputation, WHOIS registration ages, and sender fraud metrics in `scamshield_agent/data/` are **synthetic mock datasets** created strictly for safe testing and reproducible benchmarks.
+> - **Reflex Model is Optional**: The TypeSafe AI / Jev reflex model is optional; ScamShield automatically falls back to Gemini Flash JSON schema and local offline rules without configuration.
+> - **Synthetic Test Payloads**: All test cases in `tests/sample_messages.json` and harness suites use fictionalized phone numbers and non-resolving domains (`*.click`, `*.in`). Do not use real credentials or active malicious attachments for testing.
+> - **Non-Destructive Invariant**: ScamShield does **not** permanently delete messages or modify user communication accounts. All defense interventions are isolated to reversible sandboxes.
 
 ---
 
@@ -271,16 +305,6 @@ gcloud run deploy scamshield --source . --port 8080 --region us-central1 --allow
 
 ---
 
-## ⚠️ Limits & Responsible Use
-
-> [!IMPORTANT]
-> - **Synthetic Threat Intelligence**: Domain reputation, WHOIS ages, and sender fraud metrics in `scamshield_agent/data/` are **synthetic mock datasets** curated for offline sandbox evaluation and safe local testing.
-> - **Decision-Support Advisory System**: ScamShield is an **autonomous decision-support system** that assists users and operators with explainable evidence, but does not replace professional financial or legal counsel.
-> - **Synthetic Test Payloads**: All test cases in `tests/sample_messages.json` use fictional phone numbers and non-resolving domains (`*.click`, `*.in`). Never use real credentials or active malicious payloads for testing.
-> - **Non-Destructive Guarantee**: ScamShield does **not** permanently delete messages or modify user communication accounts. All actions are isolated to reversible sandboxes.
-
----
-
 ## 🗺️ Roadmap
 
 - [ ] **On-Device Small Language Model (SLM)**: Integrate Gemma 2B / Qwen2.5 on-device via MLC-LLM / WebGPU for zero-cloud mobile reasoning.
@@ -290,7 +314,19 @@ gcloud run deploy scamshield --source . --port 8080 --region us-central1 --allow
 
 ---
 
-## 🤝 Contributing & License
+## 👤 Author & Acknowledgments
 
-- Review [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), and [AGENTS.md](AGENTS.md) for development workflows and coding standards.
-- ScamShield is licensed under the [MIT License](LICENSE).
+**Author**: [ScamShield Contributors](https://github.com/your-username/scamshield)
+
+Special thanks to the open-source tools and frameworks powering ScamShield:
+- **Google Agent Development Kit (ADK)**: Multi-agent orchestration and schema-enforced LLM agents.
+- **Google Gemini**: Multimodal and agentic reasoning engines (Gemini 2.5 Pro & Flash).
+- **FastAPI**: Asynchronous web framework and Server-Sent Events infrastructure.
+- **TypeSafe AI**: High-velocity structured reflex triage SDK.
+- **Ollama**: Local, private on-device LLM runtime.
+
+---
+
+## 📄 License
+
+ScamShield is licensed under the [MIT License](LICENSE).
